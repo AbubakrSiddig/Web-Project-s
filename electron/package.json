@@ -1,0 +1,27 @@
+{
+  "name": "poker-pharma-desktop",
+  "version": "1.0.0",
+  "description": "منظومة بوكر فارما لإدارة الأعمال وتوزيع الأدوية والمستلزمات الطبية - تطبيق سطح المكتب",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "author": "شركة بوكر فارما للتجارة والاستثمار المحدودة - جمهورية السودان",
+  "license": "Proprietary",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.pokerpharma.desktop",
+    "productName": "بوكر فارما - إدارة الأعمال الدوائية",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة بوكر فارما لإدارة الأعمال وتوزيع الأدوية</title>
+    <!-- Bootstrap 5 RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Cairo Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: #0284c7 !important;
+        }
+        .sidebar {
+            background: #ffffff;
+            min-height: calc(100vh - 65px);
+            border-left: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+        .sidebar .nav-link {
+            font-weight: 600;
+            color: #475569;
+            padding: 10px 18px;
+            border-radius: 8px;
+            margin: 2px 10px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        .sidebar .nav-link i {
+            width: 24px;
+            font-size: 1.1rem;
+            margin-left: 8px;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: #e0f2fe;
+            color: #0284c7;
+        }
+        .content-area {
+            padding: 25px;
+        }
+        .card {
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 700;
+            padding: 14px 20px;
+        }
+        .stat-card {
+            border-radius: 14px;
+            padding: 18px 20px;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07);
+        }
+        .stat-card i.bg-icon {
+            position: absolute;
+            left: -15px;
+            bottom: -15px;
+            font-size: 80px;
+            opacity: 0.16;
+        }
+        .table thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .badge-fefo {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: #fff;
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #printableInvoiceArea, #printableInvoiceArea * { visibility: visible; }
+            #printableInvoiceArea { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top py-2 px-3 shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <i class="fa-solid fa-capsules fs-3 text-primary me-2 ms-2"></i>
+            <span>بوكر فارما <small class="fs-6 fw-normal text-muted">| شركة بوكر فارما للتجارة والاستثمار المحدودة</small></span>
+        </a>
+        <div class="d-flex align-items-center ms-auto">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3">
+                <i class="fa-solid fa-circle-check me-1"></i> النظام متصل بنجاح
+            </span>
+            <div class="dropdown me-2">
+                <button class="btn btn-light dropdown-toggle d-flex align-items-center border" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-circle-user text-primary fs-5 ms-2"></i>
+                    <span id="navUserName" class="fw-bold">المستخدم</span>
+                    <span id="navUserRole" class="badge bg-primary-subtle text-primary ms-2">الدور</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><h6 class="dropdown-header" id="navUserFullName">اسم الموظف</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="Auth.logout()"><i class="fa-solid fa-power-off ms-2"></i>تسجيل الخروج</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="nav flex-column nav-pills" id="v-pills-tab">
+                <a class="nav-link active" href="javascript:void(0)" onclick="showView('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i> لوحة المؤشرات
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('sales')">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> المبيعات ونقاط البيع
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('purchases')">
+                    <i class="fa-solid fa-truck-ramp-box"></i> المشتريات والموردين
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('warehouses')">
+                    <i class="fa-solid fa-boxes-stacked"></i> المخازن والمخزون
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('batches')">
+                    <i class="fa-solid fa-clock-rotate-left"></i> التشغيلات والصلاحية
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('products')">
+                    <i class="fa-solid fa-tablets"></i> دليل الأصناف والأدوية
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('returns')">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> المرتجعات الدوائية
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('accounting')">
+                    <i class="fa-solid fa-vault"></i> الخزائن والحسابات والسندات
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('reports')">
+                    <i class="fa-solid fa-chart-line"></i> التقارير الشاملة
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('categories')">
+                    <i class="fa-solid fa-layer-group"></i> الفئات الدوائية
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('users')">
+                    <i class="fa-solid fa-users-gear"></i> المستخدمين
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('roles')">
+                    <i class="fa-solid fa-shield-halved"></i> الصلاحيات والأدوار
+                </a>
+                <a class="nav-link" href="javascript:void(0)" onclick="showView('audit')">
+                    <i class="fa-solid fa-user-shield"></i> سجل التدقيق الأمني
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-md-9 col-lg-10 content-area">
+
+            <!-- 1. لوحة المؤشرات (Dashboard View) -->
+            <div id="view-dashboard">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-chart-pie text-primary ms-2"></i>لوحة التحكم والمؤشرات التحليلية</h4>
+                        <p class="text-muted mb-0">نظرة شاملة ومباشرة على العمليات الدوائية، المبيعات، المخزون، والسيولة النقدية.</p>
+                    </div>
+                    <button class="btn btn-outline-primary" onclick="loadDashboardStats()">
+                        <i class="fa-solid fa-arrows-rotate ms-1"></i> تحديث البيانات
+                    </button>
+                </div>
+
+                <!-- بطاقات المؤشرات الرقمية السريعة -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #0284c7, #0369a1);">
+                            <i class="fa-solid fa-cash-register bg-icon"></i>
+                            <div class="text-white-50 small fw-bold">مبيعات اليوم الإجمالية</div>
+                            <div class="fs-3 fw-bold mt-1" id="dashTodaySales">0.00 ج.س</div>
+                            <div class="small mt-2" id="dashTodaySalesCount">0 فواتير بيع</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #047857);">
+                            <i class="fa-solid fa-vault bg-icon"></i>
+                            <div class="text-white-50 small fw-bold">إجمالي الخزائن والبنوك</div>
+                            <div class="fs-3 fw-bold mt-1" id="dashTotalCash">0.00 ج.س</div>
+                            <div class="small mt-2">الرصيد النقدي والبنكي المتوفر</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #b45309);">
+                            <i class="fa-solid fa-file-invoice bg-icon"></i>
+                            <div class="text-white-50 small fw-bold">ديون العملاء (ذمم مدينة)</div>
+                            <div class="fs-3 fw-bold mt-1" id="dashTotalReceivable">0.00 ج.س</div>
+                            <div class="small mt-2">مستحقات آجلة لدى الصيدليات</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+                            <i class="fa-solid fa-triangle-exclamation bg-icon"></i>
+                            <div class="text-white-50 small fw-bold">تنبيهات الصلاحية والرواكد</div>
+                            <div class="fs-3 fw-bold mt-1" id="dashNearExpiry">0 تشغيلة</div>
+                            <div class="small mt-2" id="dashExpiredCount">0 منتهية الصلاحية</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المخططات البيانية (Chart.js) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-8">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="fa-solid fa-chart-area text-primary ms-2"></i>حركة المبيعات والمشتريات (آخر 7 أيام)</span>
+                                <span class="badge bg-primary-subtle text-primary">تحليل يومي</span>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="salesPurchasesChart" height="110"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="fa-solid fa-chart-pie text-success ms-2"></i>توزيع المخزون بين المخازن
+                            </div>
+                            <div class="card-body d-flex align-items-center justify-content-center">
+                                <canvas id="warehousePieChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الأصناف الأكثر مبيعاً ومعلومات الخادم -->
+                <div class="row g-3">
+                    <div class="col-lg-7">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa-solid fa-trophy text-warning ms-2"></i>أعلى الأصناف الدوائية مبيعاً
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>الصنف</th>
+                                                <th>الكمية المباعة</th>
+                                                <th>إجمالي الإيراد</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dashTopProductsBody">
+                                            <tr><td colspan="3" class="text-center py-3 text-muted">لا توجد مبيعات مسجلة بعد</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa-solid fa-server text-info ms-2"></i>بيانات النظام والخادم
+                            </div>
+                            <div class="card-body" id="healthStatusContainer">
+                                <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> جاري فحص الخادم...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. المبيعات ونقاط البيع (Sales View) -->
+            <div id="view-sales" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-file-invoice-dollar text-primary ms-2"></i>المبيعات ونقاط البيع الدوائية</h4>
+                        <p class="text-muted mb-0">إصدار فواتير بيع للصيدليات وفق محرك FEFO وصرف التشغيلات الآمن.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateSalesModal()">
+                        <i class="fa-solid fa-plus ms-1"></i> إصدار فاتورة مبيعات جديدة
+                    </button>
+                </div>
+
+                <ul class="nav nav-tabs mb-3" id="salesTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" href="javascript:void(0)" onclick="switchSalesTab('invoices')">فواتير المبيعات</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="javascript:void(0)" onclick="switchSalesTab('customers')">دليل الصيدليات والعملاء</a>
+                    </li>
+                </ul>
+
+                <div id="salesTabInvoices">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="searchSalesInput" placeholder="بحث برقم الفاتورة أو الصيدلية..." oninput="loadSalesInvoices()">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="salesPaymentFilter" onchange="loadSalesInvoices()">
+                                        <option value="">كافة طرق الدفع</option>
+                                        <option value="cash">نقدي (Cash)</option>
+                                        <option value="credit">آجل (Credit)</option>
+                                        <option value="bank">تحويل بنكي</option>
+                                        <option value="partial">سداد جزئي</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>رقم الفاتورة</th>
+                                            <th>الصيدلية / العميل</th>
+                                            <th>المخزن</th>
+                                            <th>التاريخ</th>
+                                            <th>طريقة الدفع</th>
+                                            <th>الإجمالي</th>
+                                            <th>المدفوع</th>
+                                            <th>المتبقي</th>
+                                            <th>الحالة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salesTableBody">
+                                        <tr><td colspan="10" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="salesTabCustomers" class="d-none">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>قائمة الصيدليات المعتمدة</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openCreateCustomerModal()">
+                                <i class="fa-solid fa-plus ms-1"></i> إضافة صيدلية جديدة
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>اسم الصيدلية</th>
+                                            <th>الصيدلي المسؤول</th>
+                                            <th>رقم الترخيص</th>
+                                            <th>الهاتف</th>
+                                            <th>سقف الائتمان</th>
+                                            <th>الرصيد المالي الحالي</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customersTableBody">
+                                        <tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. المشتريات والموردين (Purchases View) -->
+            <div id="view-purchases" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-truck-ramp-box text-primary ms-2"></i>المشتريات وإدارة الموردين</h4>
+                        <p class="text-muted mb-0">تسجيل فواتير الشراء واستلام التشغيلات وتحديث أرصدة الموردين.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreatePurchaseModal()">
+                        <i class="fa-solid fa-plus ms-1"></i> تسجيل فاتورة توريد جديدة
+                    </button>
+                </div>
+
+                <ul class="nav nav-tabs mb-3" id="purchasesTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" href="javascript:void(0)" onclick="switchPurchasesTab('invoices')">فواتير الشراء والتوريد</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="javascript:void(0)" onclick="switchPurchasesTab('suppliers')">دليل الموردين وشركات الأدوية</a>
+                    </li>
+                </ul>
+
+                <div id="purchasesTabInvoices">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>رقم الفاتورة</th>
+                                            <th>المورد</th>
+                                            <th>المخزن المستلم</th>
+                                            <th>التاريخ</th>
+                                            <th>طريقة الدفع</th>
+                                            <th>الإجمالي</th>
+                                            <th>المدفوع</th>
+                                            <th>المتبقي</th>
+                                            <th>الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="purchasesTableBody">
+                                        <tr><td colspan="9" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="purchasesTabSuppliers" class="d-none">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>قائمة الموردين المعتمدين</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openCreateSupplierModal()">
+                                <i class="fa-solid fa-plus ms-1"></i> إضافة مورد جديد
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>اسم المورد</th>
+                                            <th>اسم الشركة / المصنع</th>
+                                            <th>الهاتف</th>
+                                            <th>الرقم الضريبي</th>
+                                            <th>مستحقات المورد الحالية</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="suppliersTableBody">
+                                        <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. المخازن وإدارة المخزون (Warehouses View) -->
+            <div id="view-warehouses" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-boxes-stacked text-primary ms-2"></i>المستودعات والمخازن الدوائية</h4>
+                        <p class="text-muted mb-0">إدارة المستودعات، التحويلات بين المخازن، والجرد والتسويات الدورية.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="openStockTransferModal()">
+                            <i class="fa-solid fa-right-left ms-1"></i> تحويل بين المخازن
+                        </button>
+                        <button class="btn btn-outline-secondary me-2" onclick="openStockAdjustmentModal()">
+                            <i class="fa-solid fa-clipboard-check ms-1"></i> تسوية جردية
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row" id="warehousesCardsContainer">
+                    <div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>
+                </div>
+            </div>
+
+            <!-- 5. التشغيلات والصلاحيات (Batches View) -->
+            <div id="view-batches" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-clock-rotate-left text-primary ms-2"></i>التشغيلات وتواريخ الصلاحية</h4>
+                        <p class="text-muted mb-0">التحكم في تشغيلات الأدوية، تواريخ الانتهاء، وسياسة الصرف (FEFO / FIFO).</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-info me-2" onclick="openPolicyModal()">
+                            <i class="fa-solid fa-sliders ms-1"></i> سياسة الصرف: <span id="currentPolicyBadge" class="badge bg-info">FEFO</span>
+                        </button>
+                        <button class="btn btn-outline-primary me-2" onclick="openDispatchSimModal()">
+                            <i class="fa-solid fa-wand-magic-sparkles ms-1"></i> محاكي الصرف الذكي
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateBatchModal()">
+                            <i class="fa-solid fa-plus ms-1"></i> إضافة تشغيلة جديدة
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card p-3 border-danger-subtle bg-danger-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-danger fw-bold mb-1">منتهية الصلاحية تماماً (محظورة)</h6>
+                                    <h3 class="fw-bold mb-0 text-danger" id="statExpiredBatches">0</h3>
+                                </div>
+                                <i class="fa-solid fa-ban text-danger fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 border-warning-subtle bg-warning-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-warning-emphasis fw-bold mb-1">أقل من 6 أشهر (تنبيه قرب الانتهاء)</h6>
+                                    <h3 class="fw-bold mb-0 text-warning-emphasis" id="statNearExpiryBatches">0</h3>
+                                </div>
+                                <i class="fa-solid fa-triangle-exclamation text-warning fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 border-success-subtle bg-success-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-success fw-bold mb-1">تشغيلات صالحة وسليمة</h6>
+                                    <h3 class="fw-bold mb-0 text-success" id="statValidBatches">0</h3>
+                                </div>
+                                <i class="fa-solid fa-circle-check text-success fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary active" id="tabBatchesAll" onclick="filterBatchesTab('all')">كافة التشغيلات</button>
+                                <button type="button" class="btn btn-sm btn-outline-warning" id="tabBatchesNear" onclick="filterBatchesTab('near')">قريبة الانتهاء (< 180 يوم)</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="tabBatchesExpired" onclick="filterBatchesTab('expired')">منتهية الصلاحية</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>رقم التشغيلة</th>
+                                        <th>الصنف الدوائي</th>
+                                        <th>تاريخ الإنتاج</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>الأيام المتبقية</th>
+                                        <th>سعر التكلفة</th>
+                                        <th>سعر البيع</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchesTableBody">
+                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. دليل الأصناف والأدوية (Products View) -->
+            <div id="view-products" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-tablets text-primary ms-2"></i>دليل الأصناف والأدوية</h4>
+                        <p class="text-muted mb-0">عرض وإدارة المنتجات الدوائية وتحديد أسعار البيع والتكلفة.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-success me-2" onclick="exportProductsCsv()">
+                            <i class="fa-solid fa-file-excel ms-1"></i> تصدير CSV
+                        </button>
+                        <button class="btn btn-outline-secondary me-2" onclick="openImportModal()">
+                            <i class="fa-solid fa-file-import ms-1"></i> استيراد CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateProductModal()">
+                            <i class="fa-solid fa-plus ms-1"></i> إضافة صنف جديد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" id="searchProductInput" placeholder="بحث بالاسم التجاري أو العلمي أو الكود..." oninput="loadProductsList()">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="categoryFilterSelect" onchange="loadProductsList()">
+                                    <option value="">كافة الفئات الدوائية</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>كود الصنف</th>
+                                        <th>الاسم التجاري</th>
+                                        <th>الاسم العلمي</th>
+                                        <th>الفئة</th>
+                                        <th>الوحدة</th>
+                                        <th>سعر الشراء</th>
+                                        <th>سعر البيع</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <tr><td colspan="9" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. المرتجعات الدوائية (Returns View) -->
+            <div id="view-returns" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-arrow-rotate-left text-primary ms-2"></i>المرتجعات الدوائية</h4>
+                        <p class="text-muted mb-0">إدارة مرتجعات المبيعات من الصيدليات ومرتجعات المشتريات إلى الموردين وتوجيه البضاعة التالفة للحجر الصحي.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="openCreateSalesReturnModal()">
+                            <i class="fa-solid fa-plus ms-1"></i> مرتجع مبيعات (من عميل)
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="openCreatePurchaseReturnModal()">
+                            <i class="fa-solid fa-plus ms-1"></i> مرتجع مشتريات (إلى مورد)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-pills card-header-pills">
+                            <li class="nav-item">
+                                <a class="nav-link active fw-bold" href="javascript:void(0)" onclick="loadReturnsTable('sales')">مرتجعات المبيعات</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold" href="javascript:void(0)" onclick="loadReturnsTable('purchases')">مرتجعات المشتريات</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>رقم المرتجع</th>
+                                        <th>الطرف المقابل</th>
+                                        <th>المخزن</th>
+                                        <th>التاريخ</th>
+                                        <th>الإجمالي المسترد</th>
+                                        <th>نوع التسوية المالية</th>
+                                        <th>حالة البضاعة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="returnsTableBody">
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. الحسابات والخزائن والسندات (Accounting View) -->
+            <div id="view-accounting" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-vault text-primary ms-2"></i>الخزائن والحسابات وسندات القبض والصرف</h4>
+                        <p class="text-muted mb-0">متابعة السيولة النقدية، الحسابات البنكية، وسندات القبض والصرف والتحويل المالي.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="openCreateVoucherModal('receipt')">
+                            <i class="fa-solid fa-hand-holding-dollar ms-1"></i> سند قبض نقدية
+                        </button>
+                        <button class="btn btn-danger me-2" onclick="openCreateVoucherModal('payment')">
+                            <i class="fa-solid fa-money-bill-transfer ms-1"></i> سند صرف
+                        </button>
+                        <button class="btn btn-info text-white" onclick="openCreateVoucherModal('transfer')">
+                            <i class="fa-solid fa-arrows-split-up-and-left ms-1"></i> تحويل بين الخزائن
+                        </button>
+                    </div>
+                </div>
+
+                <!-- بطاقات الخزائن والبنوك -->
+                <div class="row g-3 mb-4" id="accountingAccountsCards">
+                    <div class="col-12 text-center py-3"><div class="spinner-border text-primary"></div></div>
+                </div>
+
+                <!-- جدول السندات المالية -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>سجل سندات القبض والصرف والتحويل اليومية</span>
+                        <select class="form-select form-select-sm w-auto" id="voucherTypeFilter" onchange="loadVouchersList()">
+                            <option value="">كافة أنواع السندات</option>
+                            <option value="receipt">سندات القبض (Receipts)</option>
+                            <option value="payment">سندات الصرف (Payments)</option>
+                            <option value="transfer">التحويلات (Transfers)</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>رقم السند</th>
+                                        <th>النوع</th>
+                                        <th>الخزينة / الحساب</th>
+                                        <th>الطرف المقابل / البند</th>
+                                        <th>المبلغ</th>
+                                        <th>التاريخ</th>
+                                        <th>المستخدم المحرر</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vouchersTableBody">
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. التقارير الدوائية الشاملة (Reports View) -->
+            <div id="view-reports" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-chart-line text-primary ms-2"></i>مركز التقارير الدوائية والمالية</h4>
+                        <p class="text-muted mb-0">تقارير المبيعات، المشتريات، تقييم المخزون المالي، الصلاحيات، وكشوفات الأرباح P&L.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="list-group shadow-sm" id="reportsMenu">
+                            <button type="button" class="list-group-item list-group-item-action active fw-bold" onclick="showReportType('sales')">
+                                <i class="fa-solid fa-file-invoice-dollar ms-2"></i> تقرير المبيعات
+                            </button>
+                            <button type="button" class="list-group-item list-group-item-action fw-bold" onclick="showReportType('inventory')">
+                                <i class="fa-solid fa-boxes-stacked ms-2"></i> تقييم المخزون المالي
+                            </button>
+                            <button type="button" class="list-group-item list-group-item-action fw-bold" onclick="showReportType('expiry')">
+                                <i class="fa-solid fa-triangle-exclamation ms-2"></i> تقرير الصلاحية والرواكد
+                            </button>
+                            <button type="button" class="list-group-item list-group-item-action fw-bold" onclick="showReportType('profitability')">
+                                <i class="fa-solid fa-scale-balanced ms-2"></i> تقرير الأرباح والمصروفات P&L
+                            </button>
+                            <button type="button" class="list-group-item list-group-item-action fw-bold" onclick="showReportType('customer_balances')">
+                                <i class="fa-solid fa-users ms-2"></i> كشف أرصدة العملاء
+                            </button>
+                            <button type="button" class="list-group-item list-group-item-action fw-bold" onclick="showReportType('supplier_balances')">
+                                <i class="fa-solid fa-truck ms-2"></i> كشف مستحقات الموردين
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span id="reportViewTitle" class="fw-bold">تقرير المبيعات</span>
+                                <div id="reportExportBtnContainer"></div>
+                            </div>
+                            <div class="card-body" id="reportViewContent">
+                                <div class="text-center py-5"><div class="spinner-border text-primary"></div> جاري تجهيز التقرير...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. الفئات الدوائية (Categories View) -->
+            <div id="view-categories" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-layer-group text-primary ms-2"></i>الفئات والتصنيفات الدوائية</h4>
+                        <p class="text-muted mb-0">تصنيف الأدوية حسب الزمر العلاجية والدوائية.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateCategoryModal()">
+                        <i class="fa-solid fa-plus ms-1"></i> إضافة فئة جديدة
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم الفئة الدوائية</th>
+                                        <th>الوصف</th>
+                                        <th>عدد الأصناف المسجلة</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriesTableBody">
+                                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. إدارة المستخدمين (Users View) -->
+            <div id="view-users" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-users-gear text-primary ms-2"></i>إدارة المستخدمين</h4>
+                        <p class="text-muted mb-0">إضافة وتعديل حسابات المستخدمين وتعيين أدوارهم وتفعيلهم.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateUserModal()">
+                        <i class="fa-solid fa-user-plus ms-1"></i> إضافة مستخدم جديد
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>الاسم الكامل</th>
+                                        <th>اسم المستخدم</th>
+                                        <th>الدور الوظيفي</th>
+                                        <th>الهاتف</th>
+                                        <th>الحالة</th>
+                                        <th>آخر دخول</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12. الأدوار والصلاحيات (Roles View) -->
+            <div id="view-roles" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-shield-halved text-primary ms-2"></i>الأدوار ومصفوفة الصلاحيات (RBAC)</h4>
+                        <p class="text-muted mb-0">التحكم في صلاحيات كل دور وظيفي في شركة بوكر فارما.</p>
+                    </div>
+                </div>
+                <div class="row" id="rolesCardsContainer">
+                    <div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>
+                </div>
+            </div>
+
+            <!-- 13. سجل التدقيق الأمني (Audit View) -->
+            <div id="view-audit" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-user-shield text-primary ms-2"></i>سجل التدقيق والعمليات الحساسة</h4>
+                        <p class="text-muted mb-0">تتبع كافة العمليات والتعديلات والإلغاءات في قاعدة البيانات مع الفروقات القديمة والجديدة.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>المستخدم</th>
+                                        <th>نوع العملية</th>
+                                        <th>الجدول المستهدف</th>
+                                        <th>معرف السجل</th>
+                                        <th>التاريخ والوقت</th>
+                                        <th>التفاصيل</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditTableBody">
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================== -->
+<!-- المودالات الأساسية (Modals)                          -->
+<!-- ==================================================== -->
+
+<!-- Modal: طباعة الفاتورة A4 والحراري -->
+<div class="modal fade" id="printInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">معاينة وطباعة الفاتورة</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="printableInvoiceArea">
+                <div class="text-center border-bottom pb-3 mb-3">
+                    <h4 class="fw-bold text-primary mb-1">شركة بوكر فارما للتجارة والاستثمار المحدودة</h4>
+                    <p class="text-muted small mb-0">توزيع الأدوية والمستلزمات الطبية — جمهورية السودان — الخرطوم</p>
+                    <p class="text-muted small mb-0">هاتف: +249 123 456 789 | ترخيص رقم: PH-SUD-2024/098</p>
+                </div>
+                <div id="printInvoiceDetailsContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="fa-solid fa-print ms-1"></i> طباعة الآن
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: إضافة صنف دوائي -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="productModalTitle">إضافة صنف دوائي جديد</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="productForm" onsubmit="saveProductForm(event)">
+                <input type="hidden" id="productIdField">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الاسم التجاري (Trade Name) *</label>
+                            <input type="text" class="form-control" id="formTradeName" required placeholder="مثال: بنادول إكسترا">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الاسم العلمي (Generic Name)</label>
+                            <input type="text" class="form-control" id="formGenericName" placeholder="مثال: Paracetamol + Caffeine">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">الفئة الدوائية *</label>
+                            <select class="form-select" id="formProductCategoryId" required></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">كود الصنف (Item Code)</label>
+                            <input type="text" class="form-control" id="formItemCode" placeholder="يترك فارغاً للتوليد الآلي">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">الوحدة الأساسية</label>
+                            <input type="text" class="form-control" id="formMainUnit" value="عبوة">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">سعر الشراء الافتراضي (SDG)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="formPurchasePrice" value="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-primary">سعر البيع المعتمد (SDG) *</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="formSellingPrice" value="0.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-danger">الحد الأدنى لسعر البيع (SDG)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="formMinSellingPrice" value="0.00">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ الصنف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: استيراد CSV -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">استيراد الأصناف من ملف CSV</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <form onsubmit="submitImportCsv(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">اختر ملف CSV المرمز بـ UTF-8</label>
+                        <input type="file" class="form-control" id="csvFileInput" accept=".csv" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">بدء الاستيراد</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: إضافة تشغيلة جديدة -->
+<div class="modal fade" id="batchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="batchModalTitle">إضافة تشغيلة دوائية جديدة</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <form onsubmit="saveBatchForm(event)">
+                <input type="hidden" id="batchIdField">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الصنف الدوائي *</label>
+                        <select class="form-select" id="formBatchProductId" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">رقم التشغيلة (Batch Number) *</label>
+                        <input type="text" class="form-control" id="formBatchNumber" required placeholder="مثال: BN-2026-001">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">تاريخ الإنتاج</label>
+                            <input type="date" class="form-control" id="formBatchMfgDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-danger">تاريخ الانتهاء *</label>
+                            <input type="date" class="form-control" id="formBatchExpDate" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">المخزن المستلم</label>
+                            <select class="form-select" id="formBatchWarehouseId"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الكمية الأولية</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="formBatchInitialQty" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التشغيلة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: تغيير سياسة الصرف FEFO/FIFO -->
+<div class="modal fade" id="policyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">إعدادات سياسة الصرف المخزني</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check p-3 border rounded mb-3">
+                    <input class="form-check-input ms-2" type="radio" name="dispatchPolicyRadio" id="policyFefo" value="FEFO" checked>
+                    <label class="form-check-label fw-bold text-primary" for="policyFefo">
+                        سياسة FEFO (First Expired, First Out) — الأقرب انتهاءً يُصرف أولاً [الموصى به للأدوية]
+                    </label>
+                </div>
+                <div class="form-check p-3 border rounded mb-3">
+                    <input class="form-check-input ms-2" type="radio" name="dispatchPolicyRadio" id="policyFifo" value="FIFO">
+                    <label class="form-check-label fw-bold text-secondary" for="policyFifo">
+                        سياسة FIFO (First In, First Out) — الأقدم وروداً يُصرف أولاً
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveDispatchPolicy()">حفظ وتطبيق السياسة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: كشف حساب العميل / المورد التفصيلي -->
+<div class="modal fade" id="ledgerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="ledgerModalTitle">كشف الحساب التفصيلي</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>نوع الحركة</th>
+                                <th>مدين (Debit)</th>
+                                <th>دائن (Credit)</th>
+                                <th>الرصيد بعد الحركة</th>
+                                <th>البيان والملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: إضافة مستخدم جديد -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="userModalTitle">إضافة مستخدم جديد</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <form onsubmit="saveUserForm(event)">
+                <input type="hidden" id="userIdField">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الاسم الكامل *</label>
+                        <input type="text" class="form-control" id="formFullName" required placeholder="مثال: د. مجتبى أحمد">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">اسم المستخدم *</label>
+                        <input type="text" class="form-control" id="formUsername" required placeholder="مثال: mujtaba">
+                    </div>
+                    <div class="mb-3" id="passwordGroup">
+                        <label class="form-label fw-bold">كلمة المرور *</label>
+                        <input type="password" class="form-control" id="formPassword" minlength="6" placeholder="6 خانات على الأقل">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الدور الوظيفي *</label>
+                        <select class="form-select" id="formRoleId" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="formEmail" placeholder="example@pokerpharma.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">رقم الهاتف</label>
+                        <input type="text" class="form-control" id="formPhone" placeholder="09xxxxxxxx">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ المستخدم</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: تفاصيل سجل التدقيق JSON Diff -->
+<div class="modal fade" id="auditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">تفاصيل العملية وسجل التدقيق</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-danger border-bottom pb-2">القيم القديمة (Before)</h6>
+                        <pre id="auditOldValues" class="bg-light p-3 rounded small" style="max-height: 300px; overflow-y: auto;"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-success border-bottom pb-2">القيم الجديدة (After)</h6>
+                        <pre id="auditNewValues" class="bg-light p-3 rounded small" style="max-height: 300px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="api-config.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+    Auth.requireAuth();
+
+    let allCategories = [];
+    let allProducts = [];
+    let allWarehouses = [];
+    let allRoles = [];
+    let currentBatchTab = 'all';
+
+    let productModalInst = null;
+    let importModalInst = null;
+    let userModalInst = null;
+    let batchModalInst = null;
+    let policyModalInst = null;
+    let printInvoiceModalInst = null;
+    let ledgerModalInst = null;
+    let auditModalInst = null;
+
+    let salesPurchasesChartInst = null;
+    let warehousePieChartInst = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        productModalInst = new bootstrap.Modal(document.getElementById('productModal'));
+        importModalInst = new bootstrap.Modal(document.getElementById('importModal'));
+        userModalInst = new bootstrap.Modal(document.getElementById('userModal'));
+        batchModalInst = new bootstrap.Modal(document.getElementById('batchModal'));
+        policyModalInst = new bootstrap.Modal(document.getElementById('policyModal'));
+        printInvoiceModalInst = new bootstrap.Modal(document.getElementById('printInvoiceModal'));
+        ledgerModalInst = new bootstrap.Modal(document.getElementById('ledgerModal'));
+        auditModalInst = new bootstrap.Modal(document.getElementById('auditModal'));
+
+        const currentUser = Auth.getUser();
+        if (currentUser) {
+            document.getElementById('navUserName').innerText = currentUser.username;
+            document.getElementById('navUserFullName').innerText = currentUser.full_name;
+            document.getElementById('navUserRole').innerText = currentUser.role_display_name || currentUser.role_name;
+        }
+
+        loadDashboardStats();
+        loadCategories();
+        loadRoles();
+        loadWarehouses();
+        loadHealthStatus();
+    });
+
+    function showView(viewId) {
+        ['dashboard', 'sales', 'purchases', 'warehouses', 'batches', 'products', 'returns', 'accounting', 'reports', 'categories', 'users', 'roles', 'audit'].forEach(v => {
+            const el = document.getElementById(`view-${v}`);
+            if (el) el.classList.add('d-none');
+        });
+
+        const target = document.getElementById(`view-${viewId}`);
+        if (target) target.classList.remove('d-none');
+
+        document.querySelectorAll('#v-pills-tab .nav-link').forEach(link => link.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+        if (viewId === 'dashboard') loadDashboardStats();
+        if (viewId === 'sales') loadSalesInvoices();
+        if (viewId === 'purchases') loadPurchasesInvoices();
+        if (viewId === 'warehouses') loadWarehouses();
+        if (viewId === 'batches') loadBatchesList();
+        if (viewId === 'products') loadProductsList();
+        if (viewId === 'returns') loadReturnsTable('sales');
+        if (viewId === 'accounting') loadAccountingStats();
+        if (viewId === 'reports') showReportType('sales');
+        if (viewId === 'categories') loadCategories();
+        if (viewId === 'users') loadUsersList();
+        if (viewId === 'roles') loadRoles();
+        if (viewId === 'audit') loadAuditList();
+    }
+
+    // ==========================================
+    // 1. Dashboard Functions
+    // ==========================================
+    async function loadDashboardStats() {
+        try {
+            const res = await API_CONFIG.fetchApi('/dashboard/stats');
+            if (res && res.data) {
+                const s = res.data;
+                document.getElementById('dashTodaySales').innerText = Number(s.today_sales.total).toLocaleString('ar-SD') + ' ج.س';
+                document.getElementById('dashTodaySalesCount').innerText = s.today_sales.count + ' فواتير بيع';
+                document.getElementById('dashTotalCash').innerText = Number(s.total_cash_balance).toLocaleString('ar-SD') + ' ج.س';
+                document.getElementById('dashTotalReceivable').innerText = Number(s.total_receivable).toLocaleString('ar-SD') + ' ج.س';
+                document.getElementById('dashNearExpiry').innerText = s.near_expiry_count + ' تشغيلة';
+                document.getElementById('dashExpiredCount').innerText = s.expired_count + ' منتهية الصلاحية';
+            }
+
+            const chartRes = await API_CONFIG.fetchApi('/dashboard/charts?days=7');
+            if (chartRes && chartRes.data) {
+                renderCharts(chartRes.data);
+            }
+        } catch (err) {
+            console.error('Error loading dashboard stats:', err);
+        }
+    }
+
+    function renderCharts(data) {
+        // Line chart for sales & purchases
+        const ctx1 = document.getElementById('salesPurchasesChart');
+        if (ctx1) {
+            if (salesPurchasesChartInst) salesPurchasesChartInst.destroy();
+            salesPurchasesChartInst = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: data.timeline.labels,
+                    datasets: [
+                        {
+                            label: 'المبيعات اليومية',
+                            data: data.timeline.sales,
+                            borderColor: '#0284c7',
+                            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'المشتريات اليومية',
+                            data: data.timeline.purchases,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        }
+
+        // Pie chart for warehouses
+        const ctx2 = document.getElementById('warehousePieChart');
+        if (ctx2 && data.warehouse_distribution) {
+            if (warehousePieChartInst) warehousePieChartInst.destroy();
+            warehousePieChartInst = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: data.warehouse_distribution.map(w => w.name),
+                    datasets: [{
+                        data: data.warehouse_distribution.map(w => w.total_units),
+                        backgroundColor: ['#0284c7', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Top products table
+        const topBody = document.getElementById('dashTopProductsBody');
+        if (topBody && data.top_products) {
+            if (data.top_products.length === 0) {
+                topBody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">لا توجد مبيعات في الفترة المحددة</td></tr>';
+            } else {
+                topBody.innerHTML = data.top_products.map(p => `
+                    <tr>
+                        <td class="fw-bold">${p.trade_name}</td>
+                        <td>${Number(p.total_qty).toLocaleString()}</td>
+                        <td class="text-primary fw-bold">${Number(p.total_amount).toLocaleString()} ج.س</td>
+                    </tr>
+                `).join('');
+            }
+        }
+    }
+
+    // ==========================================
+    // 2. Sales & Customers Functions
+    // ==========================================
+    async function loadSalesInvoices() {
+        const search = document.getElementById('searchSalesInput') ? document.getElementById('searchSalesInput').value : '';
+        const paymentType = document.getElementById('salesPaymentFilter') ? document.getElementById('salesPaymentFilter').value : '';
+        const tbody = document.getElementById('salesTableBody');
+
+        try {
+            const query = new URLSearchParams({ search, payment_type: paymentType }).toString();
+            const res = await API_CONFIG.fetchApi(`/sales?${query}`);
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">لا توجد فواتير مبيعات مسجلة</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(inv => `
+                    <tr>
+                        <td class="fw-bold text-primary">${inv.invoice_number}</td>
+                        <td>
+                            <div class="fw-bold">${inv.customer_name}</div>
+                            <small class="text-muted">${inv.pharmacy_name || ''}</small>
+                        </td>
+                        <td>${inv.warehouse_name}</td>
+                        <td>${inv.invoice_date}</td>
+                        <td><span class="badge bg-light text-dark border">${formatPaymentType(inv.payment_type)}</span></td>
+                        <td class="fw-bold">${Number(inv.total_amount).toLocaleString()} ج.س</td>
+                        <td class="text-success">${Number(inv.paid_amount).toLocaleString()} ج.س</td>
+                        <td class="text-danger fw-bold">${Number(inv.remaining_amount).toLocaleString()} ج.س</td>
+                        <td><span class="badge ${inv.status === 'confirmed' ? 'bg-success' : 'bg-danger'}">${inv.status === 'confirmed' ? 'معتمدة' : 'ملغاة'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="printInvoice(${inv.id})">
+                                <i class="fa-solid fa-print"></i>
+                            </button>
+                            ${inv.status === 'confirmed' ? `
+                                <button class="btn btn-sm btn-outline-danger" onclick="cancelSalesInvoice(${inv.id})">
+                                    <i class="fa-solid fa-ban"></i>
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    function switchSalesTab(tab) {
+        document.getElementById('salesTabInvoices').classList.toggle('d-none', tab !== 'invoices');
+        document.getElementById('salesTabCustomers').classList.toggle('d-none', tab !== 'customers');
+        document.querySelectorAll('#salesTabs .nav-link').forEach(link => link.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        if (tab === 'customers') loadCustomersList();
+    }
+
+    async function loadCustomersList() {
+        const tbody = document.getElementById('customersTableBody');
+        try {
+            const res = await API_CONFIG.fetchApi('/customers');
+            if (res && res.data && res.data.items) {
+                tbody.innerHTML = res.data.items.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td class="fw-bold">${c.pharmacy_name || c.name}</td>
+                        <td>${c.name}</td>
+                        <td><code>${c.license_number || '-'}</code></td>
+                        <td>${c.phone}</td>
+                        <td>${Number(c.credit_limit).toLocaleString()} ج.س</td>
+                        <td class="${Number(c.balance) > 0 ? 'text-danger fw-bold' : 'text-success'}">${Number(c.balance).toLocaleString()} ج.س</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="openLedgerModal('customer', ${c.id}, '${c.pharmacy_name || c.name}')">
+                                <i class="fa-solid fa-file-lines ms-1"></i> كشف الحساب
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    async function printInvoice(id) {
+        try {
+            const res = await API_CONFIG.fetchApi(`/sales/${id}/print`);
+            if (res && res.data) {
+                const inv = res.data.invoice;
+                const co = res.data.company;
+                let html = `
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <strong>رقم الفاتورة:</strong> ${inv.invoice_number}<br>
+                            <strong>التاريخ:</strong> ${inv.invoice_date}<br>
+                            <strong>طريقة السداد:</strong> ${formatPaymentType(inv.payment_type)}
+                        </div>
+                        <div class="col-6 text-start">
+                            <strong>الصيدلية:</strong> ${inv.pharmacy_name || inv.customer_name}<br>
+                            <strong>المسؤول:</strong> ${inv.customer_name}<br>
+                            <strong>المخزن:</strong> ${inv.warehouse_name}
+                        </div>
+                    </div>
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>الصنف الدوائي</th>
+                                <th>التشغيلة</th>
+                                <th>تاريخ الصلاحية</th>
+                                <th>الكمية</th>
+                                <th>سعر الوحدة</th>
+                                <th>الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inv.items.map((item, i) => `
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td><strong>${item.trade_name}</strong><br><small class="text-muted">${item.generic_name || ''}</small></td>
+                                    <td><code>${item.batch_number}</code></td>
+                                    <td>${item.expiry_date}</td>
+                                    <td>${Number(item.quantity).toLocaleString()}</td>
+                                    <td>${Number(item.unit_price).toLocaleString()}</td>
+                                    <td>${Number(item.total_price).toLocaleString()} ج.س</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="6" class="text-start">الإجمالي الكلي:</th>
+                                <th>${Number(inv.total_amount).toLocaleString()} ج.س</th>
+                            </tr>
+                            <tr>
+                                <th colspan="6" class="text-start">المبلغ المسدد:</th>
+                                <th class="text-success">${Number(inv.paid_amount).toLocaleString()} ج.س</th>
+                            </tr>
+                            <tr>
+                                <th colspan="6" class="text-start">المتبقي كآجل:</th>
+                                <th class="text-danger">${Number(inv.remaining_amount).toLocaleString()} ج.س</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                `;
+                document.getElementById('printInvoiceDetailsContent').innerHTML = html;
+                printInvoiceModalInst.show();
+            }
+        } catch (e) {
+            Swal.fire('خطأ', e.message, 'error');
+        }
+    }
+
+    async function cancelSalesInvoice(id) {
+        const confirm = await Swal.fire({
+            title: 'تأكيد إلغاء الفاتورة',
+            text: 'هل أنت متأكد من إلغاء الفاتورة؟ سيتم استرجاع البضاعة للمخزن وإلغاء مديونية العميل فوراً.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم، إلغاء الفاتورة',
+            cancelButtonText: 'تراجع',
+            confirmButtonColor: '#ef4444'
+        });
+
+        if (confirm.isConfirmed) {
+            try {
+                await API_CONFIG.fetchApi(`/sales/${id}/cancel`, { method: 'POST' });
+                Swal.fire('تم الإلغاء', 'تم إلغاء الفاتورة واسترجاع المخزون بنجاح', 'success');
+                loadSalesInvoices();
+            } catch (e) {
+                Swal.fire('خطأ', e.message, 'error');
+            }
+        }
+    }
+
+    // ==========================================
+    // 3. Purchases & Suppliers Functions
+    // ==========================================
+    async function loadPurchasesInvoices() {
+        const tbody = document.getElementById('purchasesTableBody');
+        try {
+            const res = await API_CONFIG.fetchApi('/purchases');
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">لا توجد فواتير مشتريات مسجلة</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(p => `
+                    <tr>
+                        <td class="fw-bold text-primary">${p.invoice_number}</td>
+                        <td>${p.supplier_name}</td>
+                        <td>${p.warehouse_name}</td>
+                        <td>${p.invoice_date}</td>
+                        <td><span class="badge bg-light text-dark border">${formatPaymentType(p.payment_type)}</span></td>
+                        <td class="fw-bold">${Number(p.total_amount).toLocaleString()} ج.س</td>
+                        <td class="text-success">${Number(p.paid_amount).toLocaleString()} ج.س</td>
+                        <td class="text-danger fw-bold">${Number(p.remaining_amount).toLocaleString()} ج.س</td>
+                        <td><span class="badge bg-success">${p.status}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    function switchPurchasesTab(tab) {
+        document.getElementById('purchasesTabInvoices').classList.toggle('d-none', tab !== 'invoices');
+        document.getElementById('purchasesTabSuppliers').classList.toggle('d-none', tab !== 'suppliers');
+        document.querySelectorAll('#purchasesTabs .nav-link').forEach(link => link.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        if (tab === 'suppliers') loadSuppliersList();
+    }
+
+    async function loadSuppliersList() {
+        const tbody = document.getElementById('suppliersTableBody');
+        try {
+            const res = await API_CONFIG.fetchApi('/suppliers');
+            if (res && res.data && res.data.items) {
+                tbody.innerHTML = res.data.items.map(s => `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td class="fw-bold">${s.name}</td>
+                        <td>${s.company_name || '-'}</td>
+                        <td>${s.phone}</td>
+                        <td><code>${s.tax_number || '-'}</code></td>
+                        <td class="${Number(s.balance) > 0 ? 'text-danger fw-bold' : 'text-success'}">${Number(s.balance).toLocaleString()} ج.س</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="openLedgerModal('supplier', ${s.id}, '${s.name}')">
+                                <i class="fa-solid fa-file-lines ms-1"></i> كشف الحساب
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    // ==========================================
+    // 4. Warehouses Functions
+    // ==========================================
+    async function loadWarehouses() {
+        const container = document.getElementById('warehousesCardsContainer');
+        try {
+            const res = await API_CONFIG.fetchApi('/warehouses');
+            if (res && res.data) {
+                allWarehouses = res.data;
+                container.innerHTML = res.data.map(w => `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">${w.name}</span>
+                                <span class="badge ${w.warehouse_type === 'quarantine' ? 'bg-danger' : 'bg-primary'}">${w.warehouse_type || 'مخزن رئيسي'}</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot ms-1"></i> ${w.location || 'الخرطوم'}</p>
+                                <p class="mb-2"><strong>أمين المخزن:</strong> ${w.keeper_name || 'غير محدد'}</p>
+                                <p class="mb-3"><strong>كود المخزن:</strong> <code>${w.code}</code></p>
+                                <button class="btn btn-sm btn-outline-primary w-100" onclick="viewWarehouseInventory(${w.id}, '${w.name}')">
+                                    <i class="fa-solid fa-boxes-stacked ms-1"></i> عرض جرد المخزن
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // populate select dropdowns
+                const whSelects = ['formBatchWarehouseId'];
+                whSelects.forEach(selId => {
+                    const el = document.getElementById(selId);
+                    if (el) {
+                        el.innerHTML = allWarehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+                    }
+                });
+            }
+        } catch (e) {
+            container.innerHTML = `<div class="col-12 text-center text-danger py-4">${e.message}</div>`;
+        }
+    }
+
+    // ==========================================
+    // 5. Accounting & Vouchers Functions
+    // ==========================================
+    async function loadAccountingStats() {
+        const cards = document.getElementById('accountingAccountsCards');
+        try {
+            const res = await API_CONFIG.fetchApi('/accounting/accounts');
+            if (res && res.data) {
+                cards.innerHTML = res.data.map(acc => `
+                    <div class="col-md-4">
+                        <div class="card p-3 border-primary-subtle bg-primary-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold mb-1">${acc.name}</h6>
+                                    <small class="text-muted">${acc.account_type === 'cash' ? 'خزينة نقدية' : 'حساب بنكي'}</small>
+                                    <h4 class="fw-bold text-primary mt-2 mb-0">${Number(acc.current_balance).toLocaleString()} ${acc.currency}</h4>
+                                </div>
+                                <i class="fa-solid ${acc.account_type === 'cash' ? 'fa-vault' : 'fa-building-columns'} text-primary fs-1 opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            loadVouchersList();
+        } catch (e) {
+            cards.innerHTML = `<div class="col-12 text-danger text-center">${e.message}</div>`;
+        }
+    }
+
+    async function loadVouchersList() {
+        const type = document.getElementById('voucherTypeFilter') ? document.getElementById('voucherTypeFilter').value : '';
+        const tbody = document.getElementById('vouchersTableBody');
+        try {
+            const query = type ? `?voucher_type=${type}` : '';
+            const res = await API_CONFIG.fetchApi(`/accounting/vouchers${query}`);
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">لا توجد سندات مالية مسجلة</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(v => `
+                    <tr>
+                        <td class="fw-bold"><code>${v.voucher_number}</code></td>
+                        <td><span class="badge ${v.voucher_type === 'receipt' ? 'bg-success' : (v.voucher_type === 'payment' ? 'bg-danger' : 'bg-info')}">${formatVoucherType(v.voucher_type)}</span></td>
+                        <td>${v.cash_account_name} ${v.to_cash_account_name ? ' ➔ ' + v.to_cash_account_name : ''}</td>
+                        <td>${v.customer_name || v.supplier_name || v.expense_category_name || '-'}</td>
+                        <td class="fw-bold">${Number(v.amount).toLocaleString()} ج.س</td>
+                        <td>${v.voucher_date}</td>
+                        <td><small class="text-muted">${v.created_by_name || '-'}</small></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    // ==========================================
+    // 6. Reports Functions
+    // ==========================================
+    async function showReportType(type) {
+        document.querySelectorAll('#reportsMenu button').forEach(b => b.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+        const content = document.getElementById('reportViewContent');
+        const title = document.getElementById('reportViewTitle');
+        const exportContainer = document.getElementById('reportExportBtnContainer');
+        exportContainer.innerHTML = '';
+        content.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div> جاري إعداد التقرير...</div>';
+
+        try {
+            if (type === 'sales') {
+                title.innerText = 'تقرير المبيعات التفصيلي والإجمالي';
+                const res = await API_CONFIG.fetchApi('/reports/sales');
+                const s = res.data.summary;
+                content.innerHTML = `
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">عدد الفواتير</small><h4 class="fw-bold mt-1">${s.total_invoices}</h4></div></div>
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">صافي المبيعات</small><h4 class="fw-bold text-primary mt-1">${Number(s.net_sales).toLocaleString()} ج.س</h4></div></div>
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">المبالغ المحصلة</small><h4 class="fw-bold text-success mt-1">${Number(s.total_collected).toLocaleString()} ج.س</h4></div></div>
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">الذمم الآجلة</small><h4 class="fw-bold text-danger mt-1">${Number(s.total_receivable).toLocaleString()} ج.س</h4></div></div>
+                    </div>
+                `;
+            } else if (type === 'inventory') {
+                title.innerText = 'تقرير تقييم المخزون المالي والأرباح المتوقعة';
+                exportContainer.innerHTML = `<a href="${API_CONFIG.BASE_URL}/reports/inventory?format=csv" class="btn btn-sm btn-outline-success"><i class="fa-solid fa-file-csv ms-1"></i> تحميل ملف CSV</a>`;
+                const res = await API_CONFIG.fetchApi('/reports/inventory');
+                const s = res.data.summary;
+                content.innerHTML = `
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">إجمالي الوحدات في المخازن</small><h4 class="fw-bold mt-1">${Number(s.total_units_in_stock).toLocaleString()}</h4></div></div>
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">قيمة المخزون بالتكلفة</small><h4 class="fw-bold text-secondary mt-1">${Number(s.total_cost_value).toLocaleString()} ج.س</h4></div></div>
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">قيمة المخزون بسعر البيع</small><h4 class="fw-bold text-primary mt-1">${Number(s.total_market_value).toLocaleString()} ج.س</h4></div></div>
+                        <div class="col-md-3"><div class="card p-3 bg-light text-center"><small class="text-muted">هامش الربح المتوقع</small><h4 class="fw-bold text-success mt-1">${Number(s.expected_gross_profit).toLocaleString()} ج.س (${s.expected_margin_percent}%)</h4></div></div>
+                    </div>
+                `;
+            } else if (type === 'expiry') {
+                title.innerText = 'تقرير تواريخ الصلاحية والرواكد';
+                const res = await API_CONFIG.fetchApi('/reports/expiry?days=180');
+                const d = res.data;
+                content.innerHTML = `
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6"><div class="card p-3 border-warning-subtle bg-warning-subtle"><h5 class="fw-bold text-warning-emphasis">أقل من 6 أشهر (${d.near_expiry_count} تشغيلة)</h5><p class="mb-0">رأس المال المجمد: <strong>${Number(d.near_expiry_capital).toLocaleString()} ج.س</strong></p></div></div>
+                        <div class="col-md-6"><div class="card p-3 border-danger-subtle bg-danger-subtle"><h5 class="fw-bold text-danger">منتهية الصلاحية تماماً (${d.expired_count} تشغيلة)</h5><p class="mb-0">إجمالي خسارة البضاعة المنتهية: <strong>${Number(d.expired_loss_value).toLocaleString()} ج.س</strong></p></div></div>
+                    </div>
+                `;
+            } else if (type === 'profitability') {
+                title.innerText = 'تقرير قائمة الدخل والأرباح والمصروفات (P&L)';
+                const res = await API_CONFIG.fetchApi('/reports/profitability');
+                const p = res.data;
+                content.innerHTML = `
+                    <table class="table table-bordered align-middle">
+                        <tbody>
+                            <tr><td><strong>إجمالي إيرادات المبيعات (Revenue):</strong></td><td class="fw-bold text-primary">${Number(p.gross_revenue).toLocaleString()} ج.س</td></tr>
+                            <tr><td><strong>تكلفة البضاعة المباعة (COGS):</strong></td><td class="text-danger">(-) ${Number(p.cogs).toLocaleString()} ج.س</td></tr>
+                            <tr class="table-light"><td><strong>مجمل الربح (Gross Profit):</strong></td><td class="fw-bold text-success">${Number(p.gross_profit).toLocaleString()} ج.س (${p.gross_margin}%)</td></tr>
+                            <tr><td><strong>إجمالي المصروفات التشغيلية (Expenses):</strong></td><td class="text-danger">(-) ${Number(p.total_expenses).toLocaleString()} ج.س</td></tr>
+                            <tr class="table-primary"><td><strong>صافي الأرباح (Net Profit):</strong></td><td class="fs-5 fw-bold text-success">${Number(p.net_profit).toLocaleString()} ج.س (${p.net_margin}%)</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            } else if (type === 'customer_balances') {
+                title.innerText = 'كشف أرصدة العملاء والديون';
+                const res = await API_CONFIG.fetchApi('/reports/customer-balances');
+                content.innerHTML = `
+                    <div class="alert alert-info">إجمالي الذمم المدينة لدى العملاء والصيدليات: <strong>${Number(res.data.total_receivable).toLocaleString()} ج.س</strong></div>
+                `;
+            } else if (type === 'supplier_balances') {
+                title.innerText = 'كشف مستحقات الموردين والشركات';
+                const res = await API_CONFIG.fetchApi('/reports/supplier-balances');
+                content.innerHTML = `
+                    <div class="alert alert-warning">إجمالي المستحقات الدائنة للموردين وشركات الأدوية: <strong>${Number(res.data.total_payable).toLocaleString()} ج.س</strong></div>
+                `;
+            }
+        } catch (e) {
+            content.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+        }
+    }
+
+    // ==========================================
+    // 7. Audit Log Functions
+    // ==========================================
+    async function loadAuditList() {
+        const tbody = document.getElementById('auditTableBody');
+        try {
+            const res = await API_CONFIG.fetchApi('/audit-logs');
+            if (res && res.data && res.data.items) {
+                tbody.innerHTML = res.data.items.map(a => `
+                    <tr>
+                        <td>${a.id}</td>
+                        <td><span class="fw-bold">${a.user_name || a.username || 'System'}</span></td>
+                        <td><span class="badge ${formatActionBadge(a.action)}">${a.action}</span></td>
+                        <td><code>${a.table_name}</code></td>
+                        <td>#${a.record_id || '-'}</td>
+                        <td>${a.created_at}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" onclick='showAuditDiff(${JSON.stringify(a.old_values || {})}, ${JSON.stringify(a.new_values || {})})'>
+                                <i class="fa-solid fa-code-compare ms-1"></i> عرض الفروقات
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    function showAuditDiff(oldVals, newVals) {
+        document.getElementById('auditOldValues').innerText = JSON.stringify(oldVals, null, 2);
+        document.getElementById('auditNewValues').innerText = JSON.stringify(newVals, null, 2);
+        auditModalInst.show();
+    }
+
+    // ==========================================
+    // Helper Formatters
+    // ==========================================
+    function formatPaymentType(t) {
+        const map = { cash: 'نقدي', credit: 'آجل', bank: 'تحويل بنكي', partial: 'سداد جزئي' };
+        return map[t] || t;
+    }
+
+    function formatVoucherType(t) {
+        const map = { receipt: 'قبض', payment: 'صرف', transfer: 'تحويل' };
+        return map[t] || t;
+    }
+
+    function formatActionBadge(action) {
+        if (action.includes('create')) return 'bg-success';
+        if (action.includes('update') || action.includes('edit')) return 'bg-primary';
+        if (action.includes('delete') || action.includes('cancel')) return 'bg-danger';
+        return 'bg-secondary';
+    }
+
+    async function loadHealthStatus() {
+        const c = document.getElementById('healthStatusContainer');
+        try {
+            const res = await API_CONFIG.fetchApi('/health');
+            if (res && res.data) {
+                const s = res.data;
+                c.innerHTML = `
+                    <div class="small">
+                        <p class="mb-1"><strong>المنظومة:</strong> ${s.company} v${s.version}</p>
+                        <p class="mb-1"><strong>بيئة الخادم:</strong> PHP ${s.server.php_version} (${s.server.os})</p>
+                        <p class="mb-1"><strong>قاعدة البيانات:</strong> <span class="badge bg-success">${s.database.engine}</span> (${s.database.tables_count} جدول)</p>
+                        <p class="mb-0 text-muted"><strong>التوقيت:</strong> ${s.server.server_time}</p>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            c.innerHTML = '<span class="text-danger small">تعذر الاتصال بالخادم</span>';
+        }
+    }
+
+    async function loadCategories() {
+        try {
+            const res = await API_CONFIG.fetchApi('/categories');
+            if (res && res.data) {
+                allCategories = res.data;
+                const select = document.getElementById('formProductCategoryId');
+                const filterSelect = document.getElementById('categoryFilterSelect');
+                if (select) {
+                    select.innerHTML = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+                if (filterSelect) {
+                    filterSelect.innerHTML = '<option value="">كافة الفئات الدوائية</option>' + allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function loadRoles() {
+        try {
+            const res = await API_CONFIG.fetchApi('/roles');
+            if (res && res.data) {
+                allRoles = res.data;
+                const select = document.getElementById('formRoleId');
+                if (select) {
+                    select.innerHTML = allRoles.map(r => `<option value="${r.id}">${r.display_name || r.name}</option>`).join('');
+                }
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function loadProductsList() {
+        const tbody = document.getElementById('productsTableBody');
+        const search = document.getElementById('searchProductInput') ? document.getElementById('searchProductInput').value : '';
+        const catId = document.getElementById('categoryFilterSelect') ? document.getElementById('categoryFilterSelect').value : '';
+        try {
+            const query = new URLSearchParams({ search, category_id: catId }).toString();
+            const res = await API_CONFIG.fetchApi(`/products?${query}`);
+            if (res && res.data && res.data.items) {
+                allProducts = res.data.items;
+                tbody.innerHTML = res.data.items.map(p => `
+                    <tr>
+                        <td><code>${p.item_code}</code></td>
+                        <td class="fw-bold">${p.trade_name}</td>
+                        <td class="text-muted small">${p.generic_name || '-'}</td>
+                        <td><span class="badge bg-light text-dark border">${p.category_name || '-'}</span></td>
+                        <td>${p.main_unit}</td>
+                        <td>${Number(p.purchase_price).toLocaleString()} ج.س</td>
+                        <td class="text-primary fw-bold">${Number(p.selling_price).toLocaleString()} ج.س</td>
+                        <td><span class="badge ${p.is_active == 1 ? 'bg-success' : 'bg-secondary'}">${p.is_active == 1 ? 'نشط' : 'معطل'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openEditProductModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                const batchProdSelect = document.getElementById('formBatchProductId');
+                if (batchProdSelect) {
+                    batchProdSelect.innerHTML = allProducts.map(p => `<option value="${p.id}">${p.trade_name} (${p.item_code})</option>`).join('');
+                }
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    async function loadBatchesList() {
+        const tbody = document.getElementById('batchesTableBody');
+        try {
+            let endpoint = '/batches';
+            if (currentBatchTab === 'near') endpoint = '/batches/near-expiry';
+            if (currentBatchTab === 'expired') endpoint = '/batches/expired';
+
+            const res = await API_CONFIG.fetchApi(endpoint);
+            const items = res.data.items || res.data;
+            if (items) {
+                tbody.innerHTML = items.map(b => `
+                    <tr>
+                        <td><code class="fw-bold">${b.batch_number}</code></td>
+                        <td class="fw-bold">${b.trade_name}</td>
+                        <td>${b.production_date || '-'}</td>
+                        <td>${b.expiry_date}</td>
+                        <td><span class="badge ${b.days_to_expiry <= 0 ? 'bg-danger' : (b.days_to_expiry <= 180 ? 'bg-warning text-dark' : 'bg-success')}">${b.days_to_expiry <= 0 ? 'منتهية' : b.days_to_expiry + ' يوم'}</span></td>
+                        <td>${Number(b.purchase_price).toLocaleString()} ج.س</td>
+                        <td>${Number(b.selling_price || 0).toLocaleString()} ج.س</td>
+                        <td><span class="badge ${b.status === 'expired' ? 'bg-danger' : 'bg-success'}">${b.status === 'expired' ? 'منتهية' : 'صالحة'}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+
+    function filterBatchesTab(tab) {
+        currentBatchTab = tab;
+        document.querySelectorAll('#view-batches .card-header .btn').forEach(b => b.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        loadBatchesList();
+    }
+
+    async function exportProductsCsv() {
+        window.location.href = `${API_CONFIG.BASE_URL}/products/export`;
+    }
+
+    function openImportModal() { importModalInst.show(); }
+    function openCreateProductModal() {
+        document.getElementById('productForm').reset();
+        document.getElementById('productIdField').value = '';
+        productModalInst.show();
+    }
+    function openCreateBatchModal() { batchModalInst.show(); }
+    function openPolicyModal() { policyModalInst.show(); }
+    function openDispatchSimModal() { Swal.fire('محاكي الصرف', 'يمكنك اختبار صرف أي كمية وفق FEFO عبر نافذة البيع مباشرة', 'info'); }
+
+    async function saveProductForm(e) {
+        e.preventDefault();
+        const id = document.getElementById('productIdField').value;
+        const payload = {
+            trade_name: document.getElementById('formTradeName').value,
+            generic_name: document.getElementById('formGenericName').value,
+            category_id: document.getElementById('formProductCategoryId').value,
+            item_code: document.getElementById('formItemCode').value,
+            main_unit: document.getElementById('formMainUnit').value,
+            purchase_price: document.getElementById('formPurchasePrice').value,
+            selling_price: document.getElementById('formSellingPrice').value,
+            min_selling_price: document.getElementById('formMinSellingPrice').value,
+        };
+        try {
+            const endpoint = id ? `/products/${id}` : '/products';
+            const method = id ? 'PUT' : 'POST';
+            await API_CONFIG.fetchApi(endpoint, { method, body: payload });
+            productModalInst.hide();
+            Swal.fire('نجاح', 'تم حفظ الصنف الدوائي بنجاح', 'success');
+            loadProductsList();
+        } catch (err) { Swal.fire('خطأ', err.message, 'error'); }
+    }
+
+    async function saveBatchForm(e) {
+        e.preventDefault();
+        const payload = {
+            product_id: document.getElementById('formBatchProductId').value,
+            batch_number: document.getElementById('formBatchNumber').value,
+            production_date: document.getElementById('formBatchMfgDate').value,
+            expiry_date: document.getElementById('formBatchExpDate').value,
+            warehouse_id: document.getElementById('formBatchWarehouseId').value,
+            initial_quantity: document.getElementById('formBatchInitialQty').value,
+        };
+        try {
+            await API_CONFIG.fetchApi('/batches', { method: 'POST', body: payload });
+            batchModalInst.hide();
+            Swal.fire('نجاح', 'تم تسجيل التشغيلة الدوائية بنجاح', 'success');
+            loadBatchesList();
+        } catch (err) { Swal.fire('خطأ', err.message, 'error'); }
+    }
+
+    async function saveDispatchPolicy() {
+        const policy = document.querySelector('input[name="dispatchPolicyRadio"]:checked').value;
+        try {
+            await API_CONFIG.fetchApi('/batches/policy', { method: 'PUT', body: { policy } });
+            document.getElementById('currentPolicyBadge').innerText = policy;
+            policyModalInst.hide();
+            Swal.fire('نجاح', `تم اعتماد سياسة الصرف: ${policy}`, 'success');
+        } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+    }
+
+    async function openLedgerModal(type, id, name) {
+        document.getElementById('ledgerModalTitle').innerText = `كشف حساب ${type === 'customer' ? 'العميل' : 'المورد'}: ${name}`;
+        const tbody = document.getElementById('ledgerTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
+        ledgerModalInst.show();
+        try {
+            const endpoint = type === 'customer' ? `/customers/${id}/ledger` : `/suppliers/${id}/ledger`;
+            const res = await API_CONFIG.fetchApi(endpoint);
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">لا توجد حركات مسجلة في كشف الحساب</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(t => `
+                    <tr>
+                        <td>${t.transaction_date}</td>
+                        <td><span class="badge bg-light text-dark border">${t.transaction_type}</span></td>
+                        <td class="text-danger fw-bold">${Number(t.debit).toLocaleString()} ج.س</td>
+                        <td class="text-success fw-bold">${Number(t.credit).toLocaleString()} ج.س</td>
+                        <td class="fw-bold">${Number(t.balance_after).toLocaleString()} ج.س</td>
+                        <td>${t.notes || '-'}</td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${e.message}</td></tr>`;
+        }
+    }
+</script>
+
+</body>
+</html>
