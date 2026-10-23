@@ -78,7 +78,8 @@ const Auth = {
             );
             return response.data;
         }
-        throw new Error(response.message || 'فشل تسجيل الدخول');
+        const errMsg = (response && response.message) ? response.message : 'فشل تسجيل الدخول، يرجى التأكد من البيانات';
+        throw new Error(errMsg);
     },
 
     /**

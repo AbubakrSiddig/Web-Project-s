@@ -11,19 +11,15 @@ const API_CONFIG = {
             return window.ELECTRON_API_URL;
         }
 
-        // الكشف التلقائي عند العمل عبر متصفح الويب المحلي أو الخادم
+        // الكشف التلقائي عند العمل عبر متصفح الويب المحلي أو السحابي
         if (typeof window !== 'undefined' && window.location) {
             const origin = window.location.origin;
             const pathname = window.location.pathname;
 
-            // إذا كان التطبيق يعمل داخل مجلد فرعي في XAMPP
-            const subDirMatch = pathname.match(/^(\/[^\/]+)/);
+            // إذا كان التطبيق يعمل داخل مجلد فرعي في XAMPP (مثل /poker/public)
             if (pathname.includes('/public')) {
                 const basePath = pathname.substring(0, pathname.indexOf('/public') + 7);
                 return `${origin}${basePath}/index.php/api`;
-            } else if (subDirMatch && !pathname.startsWith('/api')) {
-                // مسار فرعي لمشروع XAMPP
-                return `${origin}${subDirMatch[1]}/api`;
             }
 
             return `${origin}/api`;
@@ -83,11 +79,14 @@ const API_CONFIG = {
                         window.location.href = 'login.html';
                     }
                 }
-                throw {
-                    status: response.status,
-                    message: (data && data.message) ? data.message : `خطأ في الخادم (${response.status})`,
-                    errors: (data && data.errors) ? data.errors : null
-                };
+                const err = new Error((data && data.message) ? data.message : `خطأ في الخادم (${response.status})`);
+                err.status = response.status;
+                err.errors = (data && data.errors) ? data.errors : null;
+                throw err;
+            }
+
+            if (!data) {
+                throw new Error('استجابة غير صالحة من الخادم (Invalid Response)');
             }
 
             return data;

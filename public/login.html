@@ -190,20 +190,23 @@
             <div class="text-muted small fw-bold mb-2">
                 <i class="fa-solid fa-bolt text-warning me-1"></i> حسابات سريعة للتجربة:
             </div>
-            <div class="d-flex flex-wrap justify-content-center">
-                <span class="badge bg-primary" onclick="setDemoCredentials('admin', 'Admin@123456')">
+            <div class="d-flex flex-wrap justify-content-center gap-1">
+                <span class="badge bg-primary" role="button" onclick="setDemoCredentials('admin', 'Admin@123456')">
                     مدير النظام (Admin)
                 </span>
-                <span class="badge bg-success" onclick="setDemoCredentials('sales', 'Sales@123')">
+                <span class="badge bg-dark" role="button" onclick="setDemoCredentials('manager', 'Manager@123')">
+                    المدير العام (Manager)
+                </span>
+                <span class="badge bg-success" role="button" onclick="setDemoCredentials('sales', 'Sales@123')">
                     مسؤول مبيعات
                 </span>
-                <span class="badge bg-info text-dark" onclick="setDemoCredentials('store', 'Store@123')">
+                <span class="badge bg-info text-dark" role="button" onclick="setDemoCredentials('store', 'Store@123')">
                     أمين المخزن
                 </span>
-                <span class="badge bg-warning text-dark" onclick="setDemoCredentials('purchase', 'Purchase@123')">
+                <span class="badge bg-warning text-dark" role="button" onclick="setDemoCredentials('purchase', 'Purchase@123')">
                     مسؤول المشتريات
                 </span>
-                <span class="badge bg-secondary" onclick="setDemoCredentials('account', 'Account@123')">
+                <span class="badge bg-secondary" role="button" onclick="setDemoCredentials('account', 'Account@123')">
                     المحاسب المالي
                 </span>
             </div>
@@ -213,9 +216,9 @@
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- API Config & Auth Scripts -->
-<script src="api-config.js"></script>
-<script src="js/auth.js"></script>
+<!-- API Config & Auth Scripts (Cache Busted) -->
+<script src="api-config.js?v=0.1.3"></script>
+<script src="js/auth.js?v=0.1.3"></script>
 
 <script>
     // التعبئة السريعة للحسابات
