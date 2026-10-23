@@ -58,6 +58,7 @@ $router->group(['prefix' => '/api'], function (Router $api) {
         $prods->get('/{id}', 'App\Controllers\Api\ProductController@show', [new PermissionMiddleware('products.view')]);
         $prods->post('', 'App\Controllers\Api\ProductController@store', [new PermissionMiddleware('products.create')]);
         $prods->put('/{id}', 'App\Controllers\Api\ProductController@update', [new PermissionMiddleware('products.edit')]);
+        $prods->post('/{id}/image', 'App\Controllers\Api\ProductController@uploadImage', [new PermissionMiddleware('products.edit')]);
         $prods->put('/{id}/toggle-status', 'App\Controllers\Api\ProductController@toggleStatus', [new PermissionMiddleware('products.delete')]);
     });
 
@@ -128,7 +129,7 @@ $router->group(['prefix' => '/api'], function (Router $api) {
         $sales->get('', 'App\Controllers\Api\SalesController@index', [new PermissionMiddleware('sales.view')]);
         $sales->get('/{id}', 'App\Controllers\Api\SalesController@show', [new PermissionMiddleware('sales.view')]);
         $sales->post('', 'App\Controllers\Api\SalesController@store', [new PermissionMiddleware('sales.create')]);
-        $sales->post('/{id}/cancel', 'App\Controllers\Api\SalesController@cancel', [new PermissionMiddleware('sales.create')]);
+        $sales->post('/{id}/cancel', 'App\Controllers\Api\SalesController@cancel', [new PermissionMiddleware('sales.cancel')]);
         $sales->get('/{id}/print', 'App\Controllers\Api\SalesController@printInvoice', [new PermissionMiddleware('sales.view')]);
     });
 
@@ -154,6 +155,9 @@ $router->group(['prefix' => '/api'], function (Router $api) {
         $acc->post('/receipts', 'App\Controllers\Api\AccountingController@createReceipt', [new PermissionMiddleware('vouchers.create')]);
         $acc->post('/payments', 'App\Controllers\Api\AccountingController@createPayment', [new PermissionMiddleware('vouchers.create')]);
         $acc->post('/transfers', 'App\Controllers\Api\AccountingController@createTransfer', [new PermissionMiddleware('vouchers.create')]);
+        $acc->get('/journal-entries', 'App\Controllers\Api\AccountingController@journalEntriesIndex', [new PermissionMiddleware('ledger.view')]);
+        $acc->get('/journal-entries/{id}', 'App\Controllers\Api\AccountingController@journalEntriesShow', [new PermissionMiddleware('ledger.view')]);
+        $acc->post('/journal-entries', 'App\Controllers\Api\AccountingController@journalEntriesStore', [new PermissionMiddleware('vouchers.create')]);
     });
 
     // 18. مسارات التقارير الشاملة (Reports)

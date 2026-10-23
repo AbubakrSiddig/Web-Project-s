@@ -25,8 +25,7 @@ class SalesController extends Controller
      */
     public function index(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'search'       => $request->query('search'),
             'customer_id'  => $request->query('customer_id'),
@@ -69,8 +68,8 @@ class SalesController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             // التحقق من صلاحية تجاوز الحد الائتماني إذا كان المستخدم مديراً
             $userPerms = $currentUser['permissions'] ?? [];
@@ -91,8 +90,8 @@ class SalesController extends Controller
     {
         $id = (int)$request->routeParam('id');
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             $invoice = $this->salesService->cancelInvoice($id, $userId);
             return $this->success('تم إلغاء فاتورة المبيعات واسترجاع المخزون بنجاح', $invoice);

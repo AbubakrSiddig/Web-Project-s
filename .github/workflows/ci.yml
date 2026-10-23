@@ -1,0 +1,46 @@
+name: Boker Pharma CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Verification & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: poker_pharma
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_mysql, mbstring, json, fileinfo
+
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_PASS=.*/DB_PASS=root/g' .env
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/g' .env
+
+      - name: Initialize Database Schema and Seeds
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot poker_pharma < database/schema.sql
+          mysql -h 127.0.0.1 -P 3306 -u root -proot poker_pharma < database/seeds.sql
+
+      - name: Run Master Test Suite
+        run: php tests/run_all_tests.php

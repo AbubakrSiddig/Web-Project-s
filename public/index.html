@@ -101,19 +101,23 @@
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top py-2 px-3 shadow-sm">
     <div class="container-fluid">
+        <!-- زر فتح القائمة للشاشات الصغيرة (Mobile Offcanvas Toggle) -->
+        <button class="btn btn-outline-primary d-md-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="فتح القائمة الرئيسية">
+            <i class="fa-solid fa-bars"></i>
+        </button>
         <a class="navbar-brand d-flex align-items-center" href="index.html">
             <i class="fa-solid fa-capsules fs-3 text-primary me-2 ms-2"></i>
             <span>بوكر فارما <small class="fs-6 fw-normal text-muted">| شركة بوكر فارما للتجارة والاستثمار المحدودة</small></span>
         </a>
         <div class="d-flex align-items-center ms-auto">
-            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3 d-none d-sm-inline-block">
                 <i class="fa-solid fa-circle-check me-1"></i> النظام متصل بنجاح
             </span>
             <div class="dropdown me-2">
                 <button class="btn btn-light dropdown-toggle d-flex align-items-center border" type="button" data-bs-toggle="dropdown">
                     <i class="fa-solid fa-circle-user text-primary fs-5 ms-2"></i>
                     <span id="navUserName" class="fw-bold">المستخدم</span>
-                    <span id="navUserRole" class="badge bg-primary-subtle text-primary ms-2">الدور</span>
+                    <span id="navUserRole" class="badge bg-primary-subtle text-primary ms-2 d-none d-sm-inline-block">الدور</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li><h6 class="dropdown-header" id="navUserFullName">اسم الموظف</h6></li>
@@ -125,49 +129,102 @@
     </div>
 </nav>
 
+<!-- القائمة الجانبية للشاشات الصغيرة (Offcanvas Mobile Sidebar) -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title text-primary fw-bold" id="mobileSidebarLabel">
+            <i class="fa-solid fa-capsules ms-2"></i>بوكر فارما
+        </h5>
+        <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
+    </div>
+    <div class="offcanvas-body p-2">
+        <div class="nav flex-column nav-pills" id="mobile-v-pills-tab">
+            <a class="nav-link active" href="javascript:void(0)" onclick="showView('dashboard')">
+                <i class="fa-solid fa-chart-pie ms-2"></i> لوحة المؤشرات
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('sales')">
+                <i class="fa-solid fa-file-invoice-dollar ms-2"></i> المبيعات ونقاط البيع
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('purchases')">
+                <i class="fa-solid fa-truck-ramp-box ms-2"></i> المشتريات والموردين
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('warehouses')">
+                <i class="fa-solid fa-boxes-stacked ms-2"></i> المخازن والمخزون
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('batches')">
+                <i class="fa-solid fa-clock-rotate-left ms-2"></i> التشغيلات والصلاحية
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('products')">
+                <i class="fa-solid fa-tablets ms-2"></i> دليل الأصناف والأدوية
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('returns')">
+                <i class="fa-solid fa-arrow-rotate-left ms-2"></i> المرتجعات الدوائية
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('accounting')">
+                <i class="fa-solid fa-vault ms-2"></i> الخزائن والحسابات والسندات
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('reports')">
+                <i class="fa-solid fa-chart-line ms-2"></i> التقارير الشاملة
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('categories')">
+                <i class="fa-solid fa-layer-group ms-2"></i> الفئات الدوائية
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('users')">
+                <i class="fa-solid fa-users-gear ms-2"></i> المستخدمين
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('roles')">
+                <i class="fa-solid fa-shield-halved ms-2"></i> الصلاحيات والأدوار
+            </a>
+            <a class="nav-link" href="javascript:void(0)" onclick="showView('audit')">
+                <i class="fa-solid fa-user-shield ms-2"></i> سجل التدقيق الأمني
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar Navigation -->
-        <div class="col-md-3 col-lg-2 sidebar">
+        <!-- Sidebar Navigation (Desktop) -->
+        <div class="col-md-3 col-lg-2 sidebar d-none d-md-block">
             <div class="nav flex-column nav-pills" id="v-pills-tab">
                 <a class="nav-link active" href="javascript:void(0)" onclick="showView('dashboard')">
-                    <i class="fa-solid fa-chart-pie"></i> لوحة المؤشرات
+                    <i class="fa-solid fa-chart-pie ms-2"></i> لوحة المؤشرات
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('sales')">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> المبيعات ونقاط البيع
+                    <i class="fa-solid fa-file-invoice-dollar ms-2"></i> المبيعات ونقاط البيع
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('purchases')">
-                    <i class="fa-solid fa-truck-ramp-box"></i> المشتريات والموردين
+                    <i class="fa-solid fa-truck-ramp-box ms-2"></i> المشتريات والموردين
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('warehouses')">
-                    <i class="fa-solid fa-boxes-stacked"></i> المخازن والمخزون
+                    <i class="fa-solid fa-boxes-stacked ms-2"></i> المخازن والمخزون
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('batches')">
-                    <i class="fa-solid fa-clock-rotate-left"></i> التشغيلات والصلاحية
+                    <i class="fa-solid fa-clock-rotate-left ms-2"></i> التشغيلات والصلاحية
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('products')">
-                    <i class="fa-solid fa-tablets"></i> دليل الأصناف والأدوية
+                    <i class="fa-solid fa-tablets ms-2"></i> دليل الأصناف والأدوية
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('returns')">
-                    <i class="fa-solid fa-arrow-rotate-left"></i> المرتجعات الدوائية
+                    <i class="fa-solid fa-arrow-rotate-left ms-2"></i> المرتجعات الدوائية
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('accounting')">
-                    <i class="fa-solid fa-vault"></i> الخزائن والحسابات والسندات
+                    <i class="fa-solid fa-vault ms-2"></i> الخزائن والحسابات والسندات
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('reports')">
-                    <i class="fa-solid fa-chart-line"></i> التقارير الشاملة
+                    <i class="fa-solid fa-chart-line ms-2"></i> التقارير الشاملة
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('categories')">
-                    <i class="fa-solid fa-layer-group"></i> الفئات الدوائية
+                    <i class="fa-solid fa-layer-group ms-2"></i> الفئات الدوائية
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('users')">
-                    <i class="fa-solid fa-users-gear"></i> المستخدمين
+                    <i class="fa-solid fa-users-gear ms-2"></i> المستخدمين
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('roles')">
-                    <i class="fa-solid fa-shield-halved"></i> الصلاحيات والأدوار
+                    <i class="fa-solid fa-shield-halved ms-2"></i> الصلاحيات والأدوار
                 </a>
                 <a class="nav-link" href="javascript:void(0)" onclick="showView('audit')">
-                    <i class="fa-solid fa-user-shield"></i> سجل التدقيق الأمني
+                    <i class="fa-solid fa-user-shield ms-2"></i> سجل التدقيق الأمني
                 </a>
             </div>
         </div>
@@ -695,8 +752,11 @@
                         <button class="btn btn-danger me-2" onclick="openCreateVoucherModal('payment')">
                             <i class="fa-solid fa-money-bill-transfer ms-1"></i> سند صرف
                         </button>
-                        <button class="btn btn-info text-white" onclick="openCreateVoucherModal('transfer')">
+                        <button class="btn btn-info text-white me-2" onclick="openCreateVoucherModal('transfer')">
                             <i class="fa-solid fa-arrows-split-up-and-left ms-1"></i> تحويل بين الخزائن
+                        </button>
+                        <button class="btn btn-primary" onclick="openJournalEntryModal()">
+                            <i class="fa-solid fa-scale-balanced ms-1"></i> قيد يومي مزدوج
                         </button>
                     </div>
                 </div>
@@ -732,6 +792,36 @@
                                     </tr>
                                 </thead>
                                 <tbody id="vouchersTableBody">
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول القيود اليومية المحاسبية المزدوجة -->
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold"><i class="fa-solid fa-book-journal-whills text-primary ms-1"></i> دفتر القيود اليومية المحاسبية (Double-Entry Journal Entries)</span>
+                        <button class="btn btn-sm btn-outline-primary" onclick="openJournalEntryModal()">
+                            <i class="fa-solid fa-plus ms-1"></i> إضافة قيد جديد
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>رقم القيد</th>
+                                        <th>التاريخ</th>
+                                        <th>البيان / الشرح</th>
+                                        <th>إجمالي المدين (Debit)</th>
+                                        <th>إجمالي الدائن (Credit)</th>
+                                        <th>الحالة</th>
+                                        <th>المحرر</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="journalEntriesTableBody">
                                     <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
                                 </tbody>
                             </table>
@@ -976,8 +1066,32 @@
                             <input type="number" step="0.01" min="0" class="form-control" id="formSellingPrice" value="0.00" required>
                         </div>
                         <div class="col-md-4">
+                            <label class="form-label fw-bold text-success">سعر الجملة (SDG)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="formWholesalePrice" value="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-info">سعر القطاعي (SDG)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="formRetailPrice" value="0.00">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label fw-bold text-danger">الحد الأدنى لسعر البيع (SDG)</label>
                             <input type="number" step="0.01" min="0" class="form-control" id="formMinSellingPrice" value="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">الباركود (Barcode)</label>
+                            <input type="text" class="form-control" id="formBarcode" placeholder="رقم الباركود الدولي">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">الشركة المصنعة</label>
+                            <input type="text" class="form-control" id="formManufacturer" placeholder="مثال: فارما لاند">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">بلد المنشأ</label>
+                            <input type="text" class="form-control" id="formOriginCountry" placeholder="مثال: السودان، الهند، الأردن">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">صورة الصنف (JPG, PNG, WEBP)</label>
+                            <input type="file" class="form-control" id="formProductImage" accept="image/png, image/jpeg, image/webp">
                         </div>
                     </div>
                 </div>
@@ -1197,6 +1311,68 @@
     </div>
 </div>
 
+<!-- Modal: إنشاء قيد يومي محاسبي مزدوج -->
+<div class="modal fade" id="journalEntryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-scale-balanced text-primary ms-2"></i>إنشاء قيد يومي محاسبي مزدوج (Double-Entry Journal)</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <form onsubmit="saveJournalEntryForm(event)">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">البيان / شرح القيد *</label>
+                            <input type="text" class="form-control" id="formJeDescription" required placeholder="مثال: إثبات مصاريف تشغيل وتوزيع الأدوية نقدياً">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">تاريخ القيد *</label>
+                            <input type="date" class="form-control" id="formJeDate" required>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-2" id="journalLinesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35%">اسم الحساب (Account Name) *</th>
+                                    <th style="width: 20%">نوع الحساب</th>
+                                    <th style="width: 20%">مدين (Debit) SDG</th>
+                                    <th style="width: 20%">دائن (Credit) SDG</th>
+                                    <th style="width: 5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="journalLinesBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold table-light">
+                                    <td colspan="2" class="text-end">الإجمالي المحاسبي:</td>
+                                    <td id="jeTotalDebit">0.00 SDG</td>
+                                    <td id="jeTotalCredit">0.00 SDG</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addJournalLineRow()">
+                            <i class="fa-solid fa-plus ms-1"></i> إضافة سطر جديد
+                        </button>
+                        <div id="jeBalanceBadge" class="badge bg-danger fs-6 p-2">القيد غير متوازن!</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="jeSubmitBtn" disabled>حفظ واعتماد القيد</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Scripts (Cache Busted) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1220,9 +1396,20 @@
     let printInvoiceModalInst = null;
     let ledgerModalInst = null;
     let auditModalInst = null;
+    let journalModalInst = null;
 
     let salesPurchasesChartInst = null;
     let warehousePieChartInst = null;
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         productModalInst = new bootstrap.Modal(document.getElementById('productModal'));
@@ -1233,6 +1420,7 @@
         printInvoiceModalInst = new bootstrap.Modal(document.getElementById('printInvoiceModal'));
         ledgerModalInst = new bootstrap.Modal(document.getElementById('ledgerModal'));
         auditModalInst = new bootstrap.Modal(document.getElementById('auditModal'));
+        journalModalInst = new bootstrap.Modal(document.getElementById('journalEntryModal'));
 
         const currentUser = Auth.getUser();
         if (currentUser) {
@@ -1249,6 +1437,13 @@
     });
 
     function showView(viewId) {
+        // Close mobile sidebar offcanvas if open
+        const mobileSidebarEl = document.getElementById('mobileSidebar');
+        if (mobileSidebarEl) {
+            const bsOffcanvas = bootstrap.Offcanvas.getInstance(mobileSidebarEl);
+            if (bsOffcanvas) bsOffcanvas.hide();
+        }
+
         ['dashboard', 'sales', 'purchases', 'warehouses', 'batches', 'products', 'returns', 'accounting', 'reports', 'categories', 'users', 'roles', 'audit'].forEach(v => {
             const el = document.getElementById(`view-${v}`);
             if (el) el.classList.add('d-none');
@@ -1673,6 +1868,7 @@
                 `).join('');
             }
             loadVouchersList();
+            loadJournalEntriesList();
         } catch (e) {
             cards.innerHTML = `<div class="col-12 text-danger text-center">${e.message}</div>`;
         }
@@ -1871,13 +2067,102 @@
                 const select = document.getElementById('formProductCategoryId');
                 const filterSelect = document.getElementById('categoryFilterSelect');
                 if (select) {
-                    select.innerHTML = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                    select.innerHTML = allCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
                 }
                 if (filterSelect) {
-                    filterSelect.innerHTML = '<option value="">كافة الفئات الدوائية</option>' + allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                    filterSelect.innerHTML = '<option value="">كافة الفئات الدوائية</option>' + allCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+                }
+                const catTbody = document.getElementById('categoriesTableBody');
+                if (catTbody) {
+                    if (allCategories.length === 0) {
+                        catTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">لا توجد فئات دوائية مسجلة</td></tr>';
+                    } else {
+                        catTbody.innerHTML = allCategories.map((c, idx) => `
+                            <tr>
+                                <td>${idx + 1}</td>
+                                <td class="fw-bold">${escapeHtml(c.name)}</td>
+                                <td>${escapeHtml(c.description || '-')}</td>
+                                <td><span class="badge bg-light text-dark border">${c.products_count || 0} صنف</span></td>
+                                <td><span class="badge ${c.is_active != 0 ? 'bg-success' : 'bg-secondary'}">${c.is_active != 0 ? 'نشط' : 'معطل'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="openEditCategoryModal(${c.id}, '${escapeHtml(c.name).replace(/'/g, "\\'")}', '${escapeHtml(c.description || '').replace(/'/g, "\\'")}')">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
                 }
             }
         } catch (e) { console.error(e); }
+    }
+
+    async function openCreateCategoryModal() {
+        const { value: formValues } = await Swal.fire({
+            title: 'إضافة فئة دوائية جديدة',
+            html:
+                '<input id="swalCatName" class="swal2-input" placeholder="اسم الفئة (مثال: مضادات حيوية)">' +
+                '<input id="swalCatDesc" class="swal2-input" placeholder="الوصف (اختياري)">',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'حفظ الفئة',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const name = document.getElementById('swalCatName').value.trim();
+                if (!name) {
+                    Swal.showValidationMessage('اسم الفئة الدوائية مطلوب');
+                    return false;
+                }
+                return {
+                    name: name,
+                    description: document.getElementById('swalCatDesc').value.trim()
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await API_CONFIG.fetchApi('/categories', { method: 'POST', body: formValues });
+                Swal.fire('نجاح', 'تمت إضافة الفئة بنجاح', 'success');
+                loadCategories();
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            }
+        }
+    }
+
+    async function openEditCategoryModal(id, currentName, currentDesc) {
+        const { value: formValues } = await Swal.fire({
+            title: 'تعديل الفئة الدوائية',
+            html:
+                `<input id="swalCatName" class="swal2-input" value="${escapeHtml(currentName)}" placeholder="اسم الفئة">` +
+                `<input id="swalCatDesc" class="swal2-input" value="${escapeHtml(currentDesc)}" placeholder="الوصف">`,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'حفظ التعديل',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const name = document.getElementById('swalCatName').value.trim();
+                if (!name) {
+                    Swal.showValidationMessage('اسم الفئة الدوائية مطلوب');
+                    return false;
+                }
+                return {
+                    name: name,
+                    description: document.getElementById('swalCatDesc').value.trim()
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await API_CONFIG.fetchApi(`/categories/${id}`, { method: 'PUT', body: formValues });
+                Swal.fire('نجاح', 'تم تعديل الفئة بنجاح', 'success');
+                loadCategories();
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            }
+        }
     }
 
     async function loadRoles() {
@@ -1887,7 +2172,24 @@
                 allRoles = res.data;
                 const select = document.getElementById('formRoleId');
                 if (select) {
-                    select.innerHTML = allRoles.map(r => `<option value="${r.id}">${r.display_name || r.name}</option>`).join('');
+                    select.innerHTML = allRoles.map(r => `<option value="${r.id}">${escapeHtml(r.display_name || r.name)}</option>`).join('');
+                }
+                const container = document.getElementById('rolesCardsContainer');
+                if (container) {
+                    container.innerHTML = allRoles.map(r => `
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0 text-primary">${escapeHtml(r.display_name || r.name)}</h6>
+                                    <code>${escapeHtml(r.name)}</code>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted small mb-2">${escapeHtml(r.description || 'دور معتمد بالنظام')}</p>
+                                    <span class="badge bg-info-subtle text-info-emphasis border">${(r.permissions && r.permissions.length) || (r.permissions_count || 0)} صلاحية مفعلة</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
                 }
             }
         } catch (e) { console.error(e); }
@@ -1902,13 +2204,17 @@
             const res = await API_CONFIG.fetchApi(`/products?${query}`);
             if (res && res.data && res.data.items) {
                 allProducts = res.data.items;
+                if (allProducts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">لا توجد أصناف مسجلة مطابقة للبحث</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = res.data.items.map(p => `
                     <tr>
-                        <td><code>${p.item_code}</code></td>
-                        <td class="fw-bold">${p.trade_name}</td>
-                        <td class="text-muted small">${p.generic_name || '-'}</td>
-                        <td><span class="badge bg-light text-dark border">${p.category_name || '-'}</span></td>
-                        <td>${p.main_unit}</td>
+                        <td><code>${escapeHtml(p.item_code)}</code></td>
+                        <td class="fw-bold">${escapeHtml(p.trade_name)}</td>
+                        <td class="text-muted small">${escapeHtml(p.generic_name || '-')}</td>
+                        <td><span class="badge bg-light text-dark border">${escapeHtml(p.category_name || '-')}</span></td>
+                        <td>${escapeHtml(p.main_unit)}</td>
                         <td>${Number(p.purchase_price).toLocaleString()} ج.س</td>
                         <td class="text-primary fw-bold">${Number(p.selling_price).toLocaleString()} ج.س</td>
                         <td><span class="badge ${p.is_active == 1 ? 'bg-success' : 'bg-secondary'}">${p.is_active == 1 ? 'نشط' : 'معطل'}</span></td>
@@ -1920,11 +2226,11 @@
 
                 const batchProdSelect = document.getElementById('formBatchProductId');
                 if (batchProdSelect) {
-                    batchProdSelect.innerHTML = allProducts.map(p => `<option value="${p.id}">${p.trade_name} (${p.item_code})</option>`).join('');
+                    batchProdSelect.innerHTML = allProducts.map(p => `<option value="${p.id}">${escapeHtml(p.trade_name)} (${escapeHtml(p.item_code)})</option>`).join('');
                 }
             }
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">${escapeHtml(e.message)}</td></tr>`;
         }
     }
 
@@ -1938,12 +2244,16 @@
             const res = await API_CONFIG.fetchApi(endpoint);
             const items = res.data.items || res.data;
             if (items) {
+                if (items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">لا توجد تشغيلات مسجلة</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = items.map(b => `
                     <tr>
-                        <td><code class="fw-bold">${b.batch_number}</code></td>
-                        <td class="fw-bold">${b.trade_name}</td>
-                        <td>${b.production_date || '-'}</td>
-                        <td>${b.expiry_date}</td>
+                        <td><code class="fw-bold">${escapeHtml(b.batch_number)}</code></td>
+                        <td class="fw-bold">${escapeHtml(b.trade_name)}</td>
+                        <td>${escapeHtml(b.production_date || '-')}</td>
+                        <td>${escapeHtml(b.expiry_date)}</td>
                         <td><span class="badge ${b.days_to_expiry <= 0 ? 'bg-danger' : (b.days_to_expiry <= 180 ? 'bg-warning text-dark' : 'bg-success')}">${b.days_to_expiry <= 0 ? 'منتهية' : b.days_to_expiry + ' يوم'}</span></td>
                         <td>${Number(b.purchase_price).toLocaleString()} ج.س</td>
                         <td>${Number(b.selling_price || 0).toLocaleString()} ج.س</td>
@@ -1952,7 +2262,7 @@
                 `).join('');
             }
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${escapeHtml(e.message)}</td></tr>`;
         }
     }
 
@@ -1967,15 +2277,88 @@
         window.location.href = `${API_CONFIG.BASE_URL}/products/export`;
     }
 
-    function openImportModal() { importModalInst.show(); }
+    function openImportModal() {
+        const input = document.getElementById('csvFileInput');
+        if (input) input.value = '';
+        importModalInst.show();
+    }
+
+    async function submitImportCsv(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('csvFileInput');
+        if (!fileInput || fileInput.files.length === 0) {
+            Swal.fire('تنبيه', 'يرجى اختيار ملف CSV أولاً', 'warning');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('csv_file', fileInput.files[0]);
+
+        Swal.fire({
+            title: 'جاري الاستيراد والتحقق...',
+            text: 'يتم الآن فحص ومعالجة بيانات الأصناف الدوائية داخل معاملة آمنة',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            const token = Auth.getToken();
+            const response = await fetch(`${API_CONFIG.BASE_URL}/products/import`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                importModalInst.hide();
+                Swal.fire('نجاح الاستيراد', result.message || 'تم استيراد الأصناف بنجاح', 'success');
+                loadProductsList();
+            } else {
+                let errorHtml = `<p class="fw-bold text-danger">${escapeHtml(result.message)}</p>`;
+                if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+                    errorHtml += '<div class="text-start bg-light p-2 rounded small" style="max-height: 200px; overflow-y: auto;"><ul>' +
+                        result.errors.map(err => `<li>${escapeHtml(err)}</li>`).join('') +
+                        '</ul></div>';
+                }
+                Swal.fire({ icon: 'error', title: 'فشل استيراد الملف', html: errorHtml });
+            }
+        } catch (err) {
+            Swal.fire('خطأ', err.message, 'error');
+        }
+    }
+
     function openCreateProductModal() {
         document.getElementById('productForm').reset();
         document.getElementById('productIdField').value = '';
+        document.getElementById('productModalTitle').innerText = 'إضافة صنف دوائي جديد';
         productModalInst.show();
     }
-    function openCreateBatchModal() { batchModalInst.show(); }
-    function openPolicyModal() { policyModalInst.show(); }
-    function openDispatchSimModal() { Swal.fire('محاكي الصرف', 'يمكنك اختبار صرف أي كمية وفق FEFO عبر نافذة البيع مباشرة', 'info'); }
+
+    function openEditProductModal(id) {
+        const p = allProducts.find(item => item.id == id);
+        if (!p) {
+            Swal.fire('خطأ', 'تعذر العثور على الصنف', 'error');
+            return;
+        }
+        document.getElementById('productForm').reset();
+        document.getElementById('productIdField').value = p.id;
+        document.getElementById('formTradeName').value = p.trade_name;
+        document.getElementById('formGenericName').value = p.generic_name || '';
+        document.getElementById('formProductCategoryId').value = p.category_id;
+        document.getElementById('formItemCode').value = p.item_code;
+        document.getElementById('formMainUnit').value = p.main_unit || 'عبوة';
+        document.getElementById('formPurchasePrice').value = p.purchase_price;
+        document.getElementById('formSellingPrice').value = p.selling_price;
+        document.getElementById('formWholesalePrice').value = p.wholesale_price || '0.00';
+        document.getElementById('formRetailPrice').value = p.retail_price || '0.00';
+        document.getElementById('formMinSellingPrice').value = p.min_selling_price || '0.00';
+        document.getElementById('formBarcode').value = p.barcode || '';
+        document.getElementById('formManufacturer').value = p.manufacturer || '';
+        document.getElementById('formOriginCountry').value = p.origin_country || '';
+        document.getElementById('productModalTitle').innerText = `تعديل الصنف: ${p.trade_name}`;
+        productModalInst.show();
+    }
 
     async function saveProductForm(e) {
         e.preventDefault();
@@ -1988,17 +2371,48 @@
             main_unit: document.getElementById('formMainUnit').value,
             purchase_price: document.getElementById('formPurchasePrice').value,
             selling_price: document.getElementById('formSellingPrice').value,
+            wholesale_price: document.getElementById('formWholesalePrice').value,
+            retail_price: document.getElementById('formRetailPrice').value,
             min_selling_price: document.getElementById('formMinSellingPrice').value,
+            barcode: document.getElementById('formBarcode').value,
+            manufacturer: document.getElementById('formManufacturer').value,
+            origin_country: document.getElementById('formOriginCountry').value,
         };
+
         try {
             const endpoint = id ? `/products/${id}` : '/products';
             const method = id ? 'PUT' : 'POST';
-            await API_CONFIG.fetchApi(endpoint, { method, body: payload });
+            const res = await API_CONFIG.fetchApi(endpoint, { method, body: payload });
+            const savedProdId = id || (res && res.data && res.data.id);
+
+            // Handle optional image upload
+            const imgInput = document.getElementById('formProductImage');
+            if (imgInput && imgInput.files.length > 0 && savedProdId) {
+                const imgFormData = new FormData();
+                imgFormData.append('image', imgInput.files[0]);
+                const token = Auth.getToken();
+                await fetch(`${API_CONFIG.BASE_URL}/products/${savedProdId}/image`, {
+                    method: 'POST',
+                    headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+                    body: imgFormData
+                });
+            }
+
             productModalInst.hide();
-            Swal.fire('نجاح', 'تم حفظ الصنف الدوائي بنجاح', 'success');
+            Swal.fire('نجاح', 'تم حفظ الصنف الدوائي وبيانات الأسعار والصورة بنجاح', 'success');
             loadProductsList();
-        } catch (err) { Swal.fire('خطأ', err.message, 'error'); }
+        } catch (err) {
+            Swal.fire('خطأ', err.message, 'error');
+        }
     }
+
+    function openCreateBatchModal() {
+        document.getElementById('formBatchNumber').value = 'BAT-' + Date.now().toString().slice(-6);
+        batchModalInst.show();
+    }
+
+    function openPolicyModal() { policyModalInst.show(); }
+    function openDispatchSimModal() { Swal.fire('محاكي الصرف', 'يمكنك اختبار صرف أي كمية وفق FEFO عبر نافذة البيع مباشرة', 'info'); }
 
     async function saveBatchForm(e) {
         e.preventDefault();
@@ -2028,6 +2442,480 @@
         } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
     }
 
+    // ==========================================
+    // 8. Users Management Functions
+    // ==========================================
+    async function loadUsersList() {
+        const tbody = document.getElementById('usersTableBody');
+        try {
+            const res = await API_CONFIG.fetchApi('/users');
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">لا يوجد مستخدمون مسجلون</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td class="fw-bold">${escapeHtml(u.full_name)}</td>
+                        <td><code>${escapeHtml(u.username)}</code></td>
+                        <td><span class="badge bg-primary-subtle text-primary-emphasis border">${escapeHtml(u.role_display_name || u.role_name || '-')}</span></td>
+                        <td>${escapeHtml(u.phone || '-')}</td>
+                        <td><span class="badge ${u.is_active == 1 ? 'bg-success' : 'bg-secondary'}">${u.is_active == 1 ? 'نشط' : 'معطل'}</span></td>
+                        <td><small class="text-muted">${escapeHtml(u.last_login_at || 'لم يدخل بعد')}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openEditUserModal(${u.id})">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${escapeHtml(e.message)}</td></tr>`;
+        }
+    }
+
+    function openCreateUserModal() {
+        document.getElementById('userIdField').value = '';
+        document.getElementById('formFullName').value = '';
+        document.getElementById('formUsername').value = '';
+        document.getElementById('formPassword').value = '';
+        document.getElementById('formPassword').required = true;
+        document.getElementById('passwordGroup').style.display = 'block';
+        document.getElementById('formEmail').value = '';
+        document.getElementById('formPhone').value = '';
+        userModalInst.show();
+    }
+
+    async function openEditUserModal(id) {
+        try {
+            const res = await API_CONFIG.fetchApi(`/users/${id}`);
+            if (res && res.data) {
+                const u = res.data;
+                document.getElementById('userIdField').value = u.id;
+                document.getElementById('formFullName').value = u.full_name;
+                document.getElementById('formUsername').value = u.username;
+                document.getElementById('formPassword').value = '';
+                document.getElementById('formPassword').required = false;
+                document.getElementById('formRoleId').value = u.role_id;
+                document.getElementById('formEmail').value = u.email || '';
+                document.getElementById('formPhone').value = u.phone || '';
+                userModalInst.show();
+            }
+        } catch (err) {
+            Swal.fire('خطأ', err.message, 'error');
+        }
+    }
+
+    async function saveUserForm(e) {
+        e.preventDefault();
+        const id = document.getElementById('userIdField').value;
+        const payload = {
+            full_name: document.getElementById('formFullName').value,
+            username: document.getElementById('formUsername').value,
+            role_id: document.getElementById('formRoleId').value,
+            email: document.getElementById('formEmail').value,
+            phone: document.getElementById('formPhone').value,
+        };
+        const password = document.getElementById('formPassword').value;
+        if (password) payload.password = password;
+
+        try {
+            const endpoint = id ? `/users/${id}` : '/users';
+            const method = id ? 'PUT' : 'POST';
+            await API_CONFIG.fetchApi(endpoint, { method, body: payload });
+            userModalInst.hide();
+            Swal.fire('نجاح', 'تم حفظ المستخدم بنجاح', 'success');
+            loadUsersList();
+        } catch (err) {
+            Swal.fire('خطأ', err.message, 'error');
+        }
+    }
+
+    // ==========================================
+    // 9. Returns & Warehouse Stock Functions
+    // ==========================================
+    async function loadReturnsTable(type) {
+        const tbody = document.getElementById('returnsTableBody');
+        try {
+            const endpoint = type === 'sales' ? '/returns/sales' : '/returns/purchases';
+            const res = await API_CONFIG.fetchApi(endpoint);
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">لا توجد مرتجعات ${type === 'sales' ? 'مبيعات' : 'مشتريات'} مسجلة</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(r => `
+                    <tr>
+                        <td class="fw-bold text-primary">${escapeHtml(r.return_number)}</td>
+                        <td>${escapeHtml(r.customer_name || r.supplier_name || '-')}</td>
+                        <td>${escapeHtml(r.warehouse_name || '-')}</td>
+                        <td>${escapeHtml(r.return_date)}</td>
+                        <td class="fw-bold text-danger">${Number(r.refund_amount).toLocaleString()} ج.س</td>
+                        <td><span class="badge bg-light text-dark border">${escapeHtml(r.refund_type)}</span></td>
+                        <td><span class="badge ${r.item_condition === 'damaged' ? 'bg-danger' : 'bg-success'}">${r.item_condition === 'damaged' ? 'تالف (حجر)' : 'سليم'}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${escapeHtml(e.message)}</td></tr>`;
+        }
+    }
+
+    async function viewWarehouseInventory(whId, whName) {
+        Swal.fire({
+            title: `جرد مخزن: ${whName}`,
+            text: 'جاري استدعاء أرصدة الأصناف والتشغيلات...',
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            const res = await API_CONFIG.fetchApi(`/warehouses/${whId}/inventory`);
+            if (res && res.data) {
+                const items = res.data.items || res.data;
+                if (!items || items.length === 0) {
+                    Swal.fire(`جرد مخزن: ${whName}`, 'المخزن فارغ حالياً، لا توجد أرصدة متوفرة', 'info');
+                    return;
+                }
+
+                let html = `
+                    <div class="table-responsive text-start" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الصنف الدوائي</th>
+                                    <th>الكود</th>
+                                    <th>الرصيد الكلي</th>
+                                    <th>الوحدة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${items.map(it => `
+                                    <tr>
+                                        <td><strong>${escapeHtml(it.trade_name)}</strong></td>
+                                        <td><code>${escapeHtml(it.item_code)}</code></td>
+                                        <td class="fw-bold text-primary">${Number(it.total_quantity || it.quantity || 0).toLocaleString()}</td>
+                                        <td>${escapeHtml(it.main_unit || 'عبوة')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                Swal.fire({
+                    title: `أرصدة مخزن: ${whName}`,
+                    html: html,
+                    width: '700px',
+                    confirmButtonText: 'إغلاق'
+                });
+            }
+        } catch (err) {
+            Swal.fire('خطأ', err.message, 'error');
+        }
+    }
+
+    // ==========================================
+    // 10. Quick Action Modals
+    // ==========================================
+    async function openCreateCustomerModal() {
+        const { value: formValues } = await Swal.fire({
+            title: 'إضافة عميل / صيدلية جديدة',
+            html:
+                '<input id="swalCustName" class="swal2-input" placeholder="اسم العميل / الصيدلي المسؤول *">' +
+                '<input id="swalCustPharm" class="swal2-input" placeholder="اسم الصيدلية">' +
+                '<input id="swalCustPhone" class="swal2-input" placeholder="رقم الهاتف *">' +
+                '<input id="swalCustLimit" type="number" step="0.01" class="swal2-input" placeholder="سقف الائتمان (SDG)">',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'حفظ العميل',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const name = document.getElementById('swalCustName').value.trim();
+                const phone = document.getElementById('swalCustPhone').value.trim();
+                if (!name || !phone) {
+                    Swal.showValidationMessage('الاسم ورقم الهاتف حقول مطلوبة');
+                    return false;
+                }
+                return {
+                    name: name,
+                    pharmacy_name: document.getElementById('swalCustPharm').value.trim(),
+                    phone: phone,
+                    credit_limit: parseFloat(document.getElementById('swalCustLimit').value) || 0
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await API_CONFIG.fetchApi('/customers', { method: 'POST', body: formValues });
+                Swal.fire('نجاح', 'تم تسجيل العميل بنجاح', 'success');
+                if (typeof loadCustomersList === 'function') loadCustomersList();
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            }
+        }
+    }
+
+    async function openCreateSupplierModal() {
+        const { value: formValues } = await Swal.fire({
+            title: 'إضافة مورد / شركة أدوية جديدة',
+            html:
+                '<input id="swalSuppName" class="swal2-input" placeholder="اسم المورد أو المسؤول *">' +
+                '<input id="swalSuppCompany" class="swal2-input" placeholder="اسم شركة الأدوية *">' +
+                '<input id="swalSuppPhone" class="swal2-input" placeholder="رقم الهاتف *">' +
+                '<input id="swalSuppTax" class="swal2-input" placeholder="الرقم الضريبي">',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'حفظ المورد',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const name = document.getElementById('swalSuppName').value.trim();
+                const phone = document.getElementById('swalSuppPhone').value.trim();
+                if (!name || !phone) {
+                    Swal.showValidationMessage('اسم المورد ورقم الهاتف حقول مطلوبة');
+                    return false;
+                }
+                return {
+                    name: name,
+                    company_name: document.getElementById('swalSuppCompany').value.trim(),
+                    phone: phone,
+                    tax_number: document.getElementById('swalSuppTax').value.trim()
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await API_CONFIG.fetchApi('/suppliers', { method: 'POST', body: formValues });
+                Swal.fire('نجاح', 'تم تسجيل المورد بنجاح', 'success');
+                if (typeof loadSuppliersList === 'function') loadSuppliersList();
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            }
+        }
+    }
+
+    function openCreateSalesModal() {
+        Swal.fire('فاتورة مبيعات جديدة', 'يمكنك إصدار الفواتير الآمنة مع التحقق من الرصيد والائتمان وتواريخ الصلاحية عبر نقطة البيع POS', 'info');
+    }
+
+    function openCreatePurchaseModal() {
+        Swal.fire('فاتورة مشتريات جديدة', 'يمكنك توريد شحنات الأدوية وتسجيل التشغيلات وتواريخ الإنتاج والانتهاء وسندات القبض/الصرف عبر قسم المشتريات', 'info');
+    }
+
+    function openCreateSalesReturnModal() {
+        Swal.fire('مرتجع مبيعات', 'يمكنك تسجيل المرتجع وتوجيهه لمخزن الحجر الصحي في حال تلفه عبر نظام المرتجعات', 'info');
+    }
+
+    function openCreatePurchaseReturnModal() {
+        Swal.fire('مرتجع مشتريات', 'يمكنك تسجيل المرتجع إلى المورد واسترداد قيمته النقدية أو خصمه من حسابه الآجل', 'info');
+    }
+
+    function openStockTransferModal() {
+        Swal.fire('تحويل مخزني', 'يتم تحويل الأدوية بين المستودعات والصيدليات مع تتبع رقم التشغيلة وتاريخ الصلاحية بنجاح', 'info');
+    }
+
+    function openStockAdjustmentModal() {
+        Swal.fire('تسوية جردية', 'تسجيل التسويات المخزنية (زيادة أو عجز) وترحيل قيودها المحاسبية تلقائياً في دفتر الأستاذ', 'info');
+    }
+
+    async function openCreateVoucherModal(type) {
+        const typeNames = { receipt: 'سند قبض نقدي', payment: 'سند صرف نقدي', transfer: 'سند تحويل بين الحسابات' };
+        const { value: formValues } = await Swal.fire({
+            title: `إصدار ${typeNames[type] || 'سند مالي'}`,
+            html:
+                '<input id="swalVoucherAmount" type="number" step="0.01" min="1" class="swal2-input" placeholder="المبلغ بالجنيه السوداني *">' +
+                '<input id="swalVoucherNotes" class="swal2-input" placeholder="البيان / الشرح *">',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'إصدار واعتماد السند',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const amount = parseFloat(document.getElementById('swalVoucherAmount').value);
+                const notes = document.getElementById('swalVoucherNotes').value.trim();
+                if (!amount || amount <= 0 || !notes) {
+                    Swal.showValidationMessage('المبلغ والبيان حقول مطلوبة');
+                    return false;
+                }
+                return {
+                    voucher_type: type,
+                    amount: amount,
+                    notes: notes,
+                    cash_account_id: 1, // Default primary cash box
+                    voucher_date: new Date().toISOString().split('T')[0]
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await API_CONFIG.fetchApi('/accounting/vouchers', { method: 'POST', body: formValues });
+                Swal.fire('نجاح', 'تم تسجيل السند المالي وترحيل الأرصدة بنجاح', 'success');
+                loadAccountingStats();
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            }
+        }
+    }
+
+    // ==========================================
+    // 11. Double-Entry Journal Entries
+    // ==========================================
+    let journalEntryLines = [];
+
+    function openJournalEntryModal() {
+        journalEntryLines = [
+            { account_name: 'خزينة المركز الرئيسي', account_type: 'asset', debit: 0, credit: 0 },
+            { account_name: 'إيراد المبيعات النقدية', account_type: 'revenue', debit: 0, credit: 0 }
+        ];
+        document.getElementById('formJeDescription').value = '';
+        document.getElementById('formJeDate').value = new Date().toISOString().split('T')[0];
+        renderJournalLines();
+        journalModalInst.show();
+    }
+
+    function renderJournalLines() {
+        const tbody = document.getElementById('journalLinesBody');
+        tbody.innerHTML = journalEntryLines.map((line, idx) => `
+            <tr>
+                <td>
+                    <input type="text" class="form-control form-control-sm" value="${escapeHtml(line.account_name)}" onchange="updateJeLine(${idx}, 'account_name', this.value)" required placeholder="اسم الحساب">
+                </td>
+                <td>
+                    <select class="form-select form-select-sm" onchange="updateJeLine(${idx}, 'account_type', this.value)">
+                        <option value="asset" ${line.account_type === 'asset' ? 'selected' : ''}>أصول (Asset)</option>
+                        <option value="liability" ${line.account_type === 'liability' ? 'selected' : ''}>خصوم (Liability)</option>
+                        <option value="equity" ${line.account_type === 'equity' ? 'selected' : ''}>حقوق ملكية (Equity)</option>
+                        <option value="revenue" ${line.account_type === 'revenue' ? 'selected' : ''}>إيرادات (Revenue)</option>
+                        <option value="expense" ${line.account_type === 'expense' ? 'selected' : ''}>مصروفات (Expense)</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="0" class="form-control form-control-sm je-debit-input" value="${line.debit || 0}" oninput="updateJeLine(${idx}, 'debit', this.value)">
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="0" class="form-control form-control-sm je-credit-input" value="${line.credit || 0}" oninput="updateJeLine(${idx}, 'credit', this.value)">
+                </td>
+                <td class="text-center">
+                    ${journalEntryLines.length > 2 ? `
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeJournalLineRow(${idx})">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            </tr>
+        `).join('');
+        recalcJournalTotals();
+    }
+
+    function addJournalLineRow() {
+        journalEntryLines.push({ account_name: '', account_type: 'asset', debit: 0, credit: 0 });
+        renderJournalLines();
+    }
+
+    function removeJournalLineRow(idx) {
+        if (journalEntryLines.length > 2) {
+            journalEntryLines.splice(idx, 1);
+            renderJournalLines();
+        }
+    }
+
+    function updateJeLine(idx, field, val) {
+        if (field === 'debit' || field === 'credit') {
+            journalEntryLines[idx][field] = parseFloat(val) || 0;
+        } else {
+            journalEntryLines[idx][field] = val;
+        }
+        recalcJournalTotals();
+    }
+
+    function recalcJournalTotals() {
+        let totalDebit = 0;
+        let totalCredit = 0;
+        journalEntryLines.forEach(l => {
+            totalDebit += parseFloat(l.debit) || 0;
+            totalCredit += parseFloat(l.credit) || 0;
+        });
+
+        document.getElementById('jeTotalDebit').innerText = totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' SDG';
+        document.getElementById('jeTotalCredit').innerText = totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' SDG';
+
+        const diff = Math.abs(totalDebit - totalCredit);
+        const badge = document.getElementById('jeBalanceBadge');
+        const submitBtn = document.getElementById('jeSubmitBtn');
+
+        if (totalDebit > 0 && diff < 0.01) {
+            badge.className = 'badge bg-success fs-6 p-2';
+            badge.innerText = 'القيد متوازن محاسبياً (Balanced)';
+            submitBtn.disabled = false;
+        } else {
+            badge.className = 'badge bg-danger fs-6 p-2';
+            badge.innerText = `القيد غير متوازن! الفارق: ${diff.toFixed(2)} SDG`;
+            submitBtn.disabled = true;
+        }
+    }
+
+    async function saveJournalEntryForm(e) {
+        e.preventDefault();
+        let totalDebit = 0;
+        let totalCredit = 0;
+        journalEntryLines.forEach(l => {
+            totalDebit += parseFloat(l.debit) || 0;
+            totalCredit += parseFloat(l.credit) || 0;
+        });
+
+        if (Math.abs(totalDebit - totalCredit) >= 0.01 || totalDebit === 0) {
+            Swal.fire('خطأ في القيد', 'يجب أن يتطابق إجمالي المدين مع إجمالي الدائن تماماً وبقيمة أكبر من الصفر.', 'error');
+            return;
+        }
+
+        const payload = {
+            description: document.getElementById('formJeDescription').value,
+            entry_date: document.getElementById('formJeDate').value,
+            lines: journalEntryLines
+        };
+
+        try {
+            await API_CONFIG.fetchApi('/accounting/journal-entries', {
+                method: 'POST',
+                body: payload
+            });
+            journalModalInst.hide();
+            Swal.fire('تم الحفظ', 'تم قيد المعاملة المحاسبية بنجاح وترحيلها في دفتر اليومية', 'success');
+            loadJournalEntriesList();
+        } catch (err) {
+            Swal.fire('خطأ', err.message, 'error');
+        }
+    }
+
+    async function loadJournalEntriesList() {
+        const tbody = document.getElementById('journalEntriesTableBody');
+        if (!tbody) return;
+        try {
+            const res = await API_CONFIG.fetchApi('/accounting/journal-entries');
+            if (res && res.data && res.data.items) {
+                if (res.data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">لا توجد قيود يومية مسجلة بعد</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.items.map(je => `
+                    <tr>
+                        <td><strong class="text-primary">${escapeHtml(je.entry_number)}</strong></td>
+                        <td>${escapeHtml(je.entry_date)}</td>
+                        <td>${escapeHtml(je.description)}</td>
+                        <td class="fw-bold">${Number(je.total_debit).toLocaleString('en-US', { minimumFractionDigits: 2 })} SDG</td>
+                        <td class="fw-bold">${Number(je.total_credit).toLocaleString('en-US', { minimumFractionDigits: 2 })} SDG</td>
+                        <td><span class="badge ${je.is_posted == 1 ? 'bg-success' : 'bg-secondary'}">${je.is_posted == 1 ? 'مُرحل' : 'مسودة'}</span></td>
+                        <td><small class="text-muted">${escapeHtml(je.created_by_name || 'System')}</small></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${escapeHtml(err.message)}</td></tr>`;
+        }
+    }
+
     async function openLedgerModal(type, id, name) {
         document.getElementById('ledgerModalTitle').innerText = `كشف حساب ${type === 'customer' ? 'العميل' : 'المورد'}: ${name}`;
         const tbody = document.getElementById('ledgerTableBody');
@@ -2043,17 +2931,17 @@
                 }
                 tbody.innerHTML = res.data.items.map(t => `
                     <tr>
-                        <td>${t.transaction_date}</td>
-                        <td><span class="badge bg-light text-dark border">${t.transaction_type}</span></td>
+                        <td>${escapeHtml(t.transaction_date)}</td>
+                        <td><span class="badge bg-light text-dark border">${escapeHtml(t.transaction_type)}</span></td>
                         <td class="text-danger fw-bold">${Number(t.debit).toLocaleString()} ج.س</td>
                         <td class="text-success fw-bold">${Number(t.credit).toLocaleString()} ج.س</td>
                         <td class="fw-bold">${Number(t.balance_after).toLocaleString()} ج.س</td>
-                        <td>${t.notes || '-'}</td>
+                        <td>${escapeHtml(t.notes || '-')}</td>
                     </tr>
                 `).join('');
             }
         } catch (e) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${e.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${escapeHtml(e.message)}</td></tr>`;
         }
     }
 </script>

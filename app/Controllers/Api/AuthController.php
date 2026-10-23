@@ -30,11 +30,26 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        $ip = $request->getIp();
+        $rateLimitKey = 'login:' . $ip . ':' . strtolower(trim($data['username']));
+
+        // فحص محاولات التخمين Brute-force (حد أقصى 5 محاولات خاطئة لكل 15 دقيقة)
+        if (\Core\Helpers\RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            $seconds = \Core\Helpers\RateLimiter::availableIn($rateLimitKey);
+            $minutes = max(1, (int)ceil($seconds / 60));
+            return \Core\Response::rateLimited(
+                "تجاوزت الحد الأقصى لمحاولات تسجيل الدخول الخاطئة (5 محاولات). تم إيقاف المحاولات مؤقتاً لمدة {$minutes} دقيقة لحماية الحساب.",
+                $seconds
+            );
+        }
+
         try {
-            $result = $this->authService->login($data['username'], $data['password']);
+            $result = $this->authService->login($data['username'], $data['password'], $ip, $request->getUserAgent());
+            \Core\Helpers\RateLimiter::clear($rateLimitKey);
             return $this->success('تم تسجيل الدخول بنجاح', $result);
         } catch (Exception $e) {
-            return $this->error($e->getMessage(), null, 401);
+            \Core\Helpers\RateLimiter::hit($rateLimitKey, 900); // 15 دقيقة
+            return $this->error($e->getMessage(), null, 401, 'INVALID_CREDENTIALS');
         }
     }
 

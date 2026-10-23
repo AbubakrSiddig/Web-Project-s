@@ -25,8 +25,7 @@ class StockController extends Controller
      */
     public function transfers(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'from_warehouse_id' => $request->query('from_warehouse_id'),
             'to_warehouse_id'   => $request->query('to_warehouse_id'),
@@ -66,8 +65,9 @@ class StockController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $newTransfer = $this->stockService->createTransfer($request->all(), $currentUser['id'] ?? null);
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
+            $newTransfer = $this->stockService->createTransfer($request->all(), $userId);
             return $this->success('تم إنشاء إذن التحويل بنجاح', $newTransfer, 201);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), null, 400);
@@ -82,8 +82,9 @@ class StockController extends Controller
     {
         $id = (int)$request->routeParam('id');
         try {
-            $currentUser = $request->getUser();
-            $completed = $this->stockService->approveTransfer($id, $currentUser['id'] ?? null);
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
+            $completed = $this->stockService->approveTransfer($id, $userId);
             return $this->success('تم اعتماد وتنفيذ التحويل وتحديث أرصدة المخازن بنجاح', $completed);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), null, 400);
@@ -96,8 +97,7 @@ class StockController extends Controller
      */
     public function adjustments(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'warehouse_id' => $request->query('warehouse_id'),
             'status'       => $request->query('status'),
@@ -136,8 +136,9 @@ class StockController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $newAdj = $this->stockService->createAdjustment($request->all(), $currentUser['id'] ?? null);
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
+            $newAdj = $this->stockService->createAdjustment($request->all(), $userId);
             return $this->success('تم إنشاء وثيقة الجرد بنجاح', $newAdj, 201);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), null, 400);
@@ -152,8 +153,9 @@ class StockController extends Controller
     {
         $id = (int)$request->routeParam('id');
         try {
-            $currentUser = $request->getUser();
-            $approved = $this->stockService->approveAdjustment($id, $currentUser['id'] ?? null);
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
+            $approved = $this->stockService->approveAdjustment($id, $userId);
             return $this->success('تم اعتماد التسوية وتعديل الأرصدة المخزنية بنجاح', $approved);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), null, 400);
@@ -166,8 +168,7 @@ class StockController extends Controller
      */
     public function transactions(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 50);
+        list($page, $perPage) = $this->getPaginationParams($request, 50, 100);
         $filters = [
             'warehouse_id'     => $request->query('warehouse_id'),
             'product_id'       => $request->query('product_id'),

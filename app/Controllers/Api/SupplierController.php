@@ -25,8 +25,7 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'search'    => $request->query('search'),
             'is_active' => $request->query('is_active'),

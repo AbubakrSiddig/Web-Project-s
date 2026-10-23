@@ -34,23 +34,37 @@ class AuthService extends Service
      *
      * @param string $username
      * @param string $password
+     * @param string|null $ip
+     * @param string|null $userAgent
      * @return array
      * @throws Exception
      */
-    public function login($username, $password)
+    public function login($username, $password, $ip = null, $userAgent = null)
     {
         $username = trim($username);
         $user = $this->userRepo->findByUsernameWithRole($username);
 
         if (!$user) {
+            $this->logAudit(null, 'failed_login', 'auth', null, null, [
+                'username' => $username,
+                'reason'   => 'user_not_found',
+            ]);
             throw new Exception("اسم المستخدم أو كلمة المرور غير صحيحة.");
         }
 
         if ((int)$user['is_active'] !== 1) {
+            $this->logAudit($user['id'], 'failed_login', 'auth', $user['id'], null, [
+                'username' => $username,
+                'reason'   => 'account_inactive',
+            ]);
             throw new Exception("هذا الحساب معطل حالياً. يرجى مراجعة مدير النظام.");
         }
 
         if (!Security::verifyPassword($password, $user['password_hash'])) {
+            $this->logAudit($user['id'], 'failed_login', 'auth', $user['id'], null, [
+                'username' => $username,
+                'reason'   => 'invalid_password',
+            ]);
             throw new Exception("اسم المستخدم أو كلمة المرور غير صحيحة.");
         }
 

@@ -294,4 +294,137 @@ class MySQLAccountingRepository implements AccountingRepositoryInterface
         $seq = $lastNumber ? ((int)substr($lastNumber, strlen($prefix)) + 1) : 1;
         return $prefix . str_pad($seq, 5, '0', STR_PAD_LEFT);
     }
+
+    public function generateJournalEntryNumber()
+    {
+        $prefix = 'JRN-' . date('Ym') . '-';
+        $sql = "SELECT `entry_number` FROM `journal_entries` WHERE `entry_number` LIKE ? ORDER BY `id` DESC LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$prefix . '%']);
+        $lastNumber = $stmt->fetchColumn();
+
+        $seq = $lastNumber ? ((int)substr($lastNumber, strlen($prefix)) + 1) : 1;
+        return $prefix . str_pad($seq, 5, '0', STR_PAD_LEFT);
+    }
+
+    public function createJournalEntry(array $data, array $lines)
+    {
+        $sql = "
+            INSERT INTO `journal_entries`
+            (`entry_number`, `entry_date`, `description`, `reference_type`, `reference_id`,
+             `total_debit`, `total_credit`, `is_posted`, `created_by`, `created_at`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            $data['entry_number'],
+            $data['entry_date'],
+            $data['description'],
+            $data['reference_type'] ?? 'manual',
+            $data['reference_id'] ?? null,
+            $data['total_debit'],
+            $data['total_credit'],
+            $data['is_posted'] ?? 1,
+            $data['created_by'] ?? null,
+        ]);
+        $entryId = $this->db->lastInsertId();
+
+        $lineStmt = $this->db->prepare("
+            INSERT INTO `journal_entry_lines`
+            (`journal_entry_id`, `account_name`, `account_type`, `debit`, `credit`, `notes`, `created_at`)
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ");
+
+        foreach ($lines as $line) {
+            $lineStmt->execute([
+                $entryId,
+                $line['account_name'],
+                $line['account_type'] ?? 'asset',
+                $line['debit'] ?? 0.00,
+                $line['credit'] ?? 0.00,
+                $line['notes'] ?? null,
+            ]);
+        }
+
+        return $entryId;
+    }
+
+    public function findJournalEntryById($id)
+    {
+        $sql = "
+            SELECT je.*, u.full_name as created_by_name
+            FROM `journal_entries` je
+            LEFT JOIN `users` u ON u.id = je.created_by
+            WHERE je.id = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        $entry = $stmt->fetch();
+        if (!$entry) {
+            return null;
+        }
+
+        $lineStmt = $this->db->prepare("
+            SELECT * FROM `journal_entry_lines`
+            WHERE `journal_entry_id` = ?
+            ORDER BY `id` ASC
+        ");
+        $lineStmt->execute([$id]);
+        $entry['lines'] = $lineStmt->fetchAll();
+
+        return $entry;
+    }
+
+    public function getJournalEntries(array $filters = [], $page = 1, $perPage = 25)
+    {
+        $where = ['1=1'];
+        $bindings = [];
+
+        if (!empty($filters['search'])) {
+            $where[] = "(`je`.`entry_number` LIKE ? OR `je`.`description` LIKE ?)";
+            $s = '%' . trim($filters['search']) . '%';
+            $bindings[] = $s;
+            $bindings[] = $s;
+        }
+
+        if (!empty($filters['date_from'])) {
+            $where[] = "`je`.`entry_date` >= ?";
+            $bindings[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $where[] = "`je`.`entry_date` <= ?";
+            $bindings[] = $filters['date_to'];
+        }
+
+        $whereClause = 'WHERE ' . implode(' AND ', $where);
+
+        $countSql = "SELECT COUNT(*) FROM `journal_entries` `je` {$whereClause}";
+        $stmt = $this->db->prepare($countSql);
+        $stmt->execute($bindings);
+        $total = (int)$stmt->fetchColumn();
+
+        $offset = ($page - 1) * $perPage;
+
+        $sql = "
+            SELECT je.*, u.full_name as created_by_name
+            FROM `journal_entries` je
+            LEFT JOIN `users` u ON u.id = je.created_by
+            {$whereClause}
+            ORDER BY je.id DESC
+            LIMIT {$perPage} OFFSET {$offset}
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($bindings);
+        $items = $stmt->fetchAll();
+
+        return [
+            'items'     => $items,
+            'total'     => $total,
+            'page'      => $page,
+            'per_page'  => $perPage,
+            'last_page' => (int)ceil($total / $perPage),
+        ];
+    }
 }

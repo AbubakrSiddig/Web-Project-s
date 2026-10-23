@@ -147,6 +147,8 @@ CREATE TABLE `products` (
     `main_unit` VARCHAR(50) NOT NULL DEFAULT 'عبوة',
     `purchase_price` DECIMAL(14,4) NOT NULL DEFAULT 0.0000,
     `selling_price` DECIMAL(14,4) NOT NULL DEFAULT 0.0000,
+    `wholesale_price` DECIMAL(14,4) NOT NULL DEFAULT 0.0000,
+    `retail_price` DECIMAL(14,4) NOT NULL DEFAULT 0.0000,
     `min_selling_price` DECIMAL(14,4) NOT NULL DEFAULT 0.0000,
     `min_stock_alert` INT NOT NULL DEFAULT 10,
     `image_url` VARCHAR(255) NULL,
@@ -721,6 +723,48 @@ CREATE TABLE `supplier_transactions` (
     KEY `idx_spt_date` (`transaction_date`),
     KEY `idx_spt_reference` (`transaction_type`, `reference_id`),
     CONSTRAINT `fk_spt_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 32. جدول القيود اليومية (Daily Journal Entries - Double-Entry Accounting)
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `journal_entries`;
+CREATE TABLE `journal_entries` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `entry_number` VARCHAR(50) NOT NULL,
+    `entry_date` DATE NOT NULL,
+    `description` VARCHAR(255) NOT NULL,
+    `reference_type` VARCHAR(50) NULL,
+    `reference_id` BIGINT UNSIGNED NULL,
+    `total_debit` DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+    `total_credit` DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+    `is_posted` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_by` INT UNSIGNED NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_je_number` (`entry_number`),
+    KEY `idx_je_date` (`entry_date`),
+    KEY `idx_je_reference` (`reference_type`, `reference_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 33. جدول بنود القيود اليومية التفصيلية (Journal Entry Lines)
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `journal_entry_lines`;
+CREATE TABLE `journal_entry_lines` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `journal_entry_id` BIGINT UNSIGNED NOT NULL,
+    `account_name` VARCHAR(150) NOT NULL,
+    `account_type` VARCHAR(50) NOT NULL DEFAULT 'asset',
+    `debit` DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+    `credit` DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+    `notes` VARCHAR(255) NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_jel_entry` (`journal_entry_id`),
+    KEY `idx_jel_account` (`account_name`),
+    CONSTRAINT `fk_jel_entry` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

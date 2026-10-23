@@ -92,8 +92,7 @@ class AccountingController extends Controller
 
     public function vouchersIndex(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'search'          => $request->query('search'),
             'voucher_type'    => $request->query('voucher_type'),
@@ -128,8 +127,8 @@ class AccountingController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             $voucher = $this->accountingService->createReceiptVoucher($request->all(), $userId);
             return $this->success('تم إصدار سند القبض بنجاح', $voucher, 201);
@@ -146,8 +145,8 @@ class AccountingController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             $voucher = $this->accountingService->createPaymentVoucher($request->all(), $userId);
             return $this->success('تم إصدار سند الصرف بنجاح', $voucher, 201);
@@ -165,11 +164,57 @@ class AccountingController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             $voucher = $this->accountingService->createTransferVoucher($request->all(), $userId);
             return $this->success('تم تحويل الأموال وإصدار سند التحويل بنجاح', $voucher, 201);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), null, 400);
+        }
+    }
+
+    // ==========================================
+    // 3. القيود اليومية المحاسبية (Journal Entries)
+    // ==========================================
+
+    public function journalEntriesIndex(Request $request)
+    {
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
+        $filters = [
+            'search'    => $request->query('search'),
+            'date_from' => $request->query('date_from'),
+            'date_to'   => $request->query('date_to'),
+        ];
+
+        $entries = $this->accountingService->getJournalEntries($filters, $page, $perPage);
+        return $this->success('تم استرجاع قائمة القيود اليومية بنجاح', $entries);
+    }
+
+    public function journalEntriesShow(Request $request)
+    {
+        $id = (int)$request->routeParam('id');
+        try {
+            $entry = $this->accountingService->getJournalEntryById($id);
+            return $this->success('تم استرجاع تفاصيل القيد اليومي بنجاح', $entry);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), null, 404);
+        }
+    }
+
+    public function journalEntriesStore(Request $request)
+    {
+        $this->validate($request->all(), [
+            'description' => 'required|min:3',
+            'lines'       => 'required',
+        ]);
+
+        try {
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
+
+            $entry = $this->accountingService->createJournalEntry($request->all(), $userId);
+            return $this->success('تم تسجيل القيد اليومي المزدوج بنجاح', $entry, 201);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), null, 400);
         }

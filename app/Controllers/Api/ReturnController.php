@@ -32,8 +32,7 @@ class ReturnController extends Controller
 
     public function salesIndex(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'search'                 => $request->query('search'),
             'customer_id'            => $request->query('customer_id'),
@@ -68,8 +67,8 @@ class ReturnController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             $return = $this->salesReturnService->createReturn($request->all(), $userId);
             return $this->success('تم إنشاء مرتجع المبيعات بنجاح', $return, 201);
@@ -84,8 +83,7 @@ class ReturnController extends Controller
 
     public function purchasesIndex(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'search'        => $request->query('search'),
             'supplier_id'   => $request->query('supplier_id'),
@@ -119,8 +117,8 @@ class ReturnController extends Controller
         ]);
 
         try {
-            $currentUser = $request->getUser();
-            $userId = $currentUser['id'] ?? 1;
+            $currentUser = $this->getAuthUser($request);
+            $userId = (int)$currentUser['id'];
 
             $return = $this->purchaseReturnService->createReturn($request->all(), $userId);
             return $this->success('تم إنشاء مرتجع المشتريات بنجاح', $return, 201);

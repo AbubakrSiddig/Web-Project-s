@@ -53,8 +53,12 @@ const API_CONFIG = {
             defaultHeaders['Authorization'] = `Bearer ${token}`;
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
+
         const config = {
             ...options,
+            signal: options.signal || controller.signal,
             headers: {
                 ...defaultHeaders,
                 ...(options.headers || {})
@@ -67,6 +71,7 @@ const API_CONFIG = {
 
         try {
             const response = await fetch(url, config);
+            clearTimeout(timeoutId);
             const data = await response.json().catch(() => null);
 
             if (!response.ok) {
@@ -81,6 +86,7 @@ const API_CONFIG = {
                 }
                 const err = new Error((data && data.message) ? data.message : `خطأ في الخادم (${response.status})`);
                 err.status = response.status;
+                err.code = (data && data.code) ? data.code : 'HTTP_ERROR';
                 err.errors = (data && data.errors) ? data.errors : null;
                 throw err;
             }
@@ -91,6 +97,13 @@ const API_CONFIG = {
 
             return data;
         } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                const timeoutErr = new Error(`انتهت مهلة انتظار الاتصال بالخادم (${Math.round(this.TIMEOUT_MS / 1000)} ثانية). يرجى التحقق من اتصال الإنترنت.`);
+                timeoutErr.code = 'TIMEOUT';
+                console.error('[API Timeout]:', timeoutErr.message);
+                throw timeoutErr;
+            }
             console.error('[API Error]:', error);
             throw error;
         }

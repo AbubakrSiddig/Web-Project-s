@@ -17,16 +17,26 @@ $testFiles = [
     'test_sales_and_customers.php'     => '7. فحص العملاء وفواتير المبيعات ونقاط البيع والصلاحية',
     'test_returns_and_accounting.php'  => '8. فحص المرتجعات والحسابات وسندات القبض والصرف والتحويل',
     'test_reports_and_dashboard.php'   => '9. فحص التقارير الدوائية ولوحة المؤشرات وسجل التدقيق',
+    'test_security_and_hardening.php'  => '10. فحص التحصينات الأمنية والقيود المزدوجة ومحدد المعدل وسقوف المرتجعات',
 ];
 
 $totalPassedSuites = 0;
 $totalFailedSuites = 0;
 
+// Resolve portable PHP binary
+$phpBinary = 'php';
+if (defined('PHP_BINARY') && file_exists(PHP_BINARY)) {
+    $phpBinary = PHP_BINARY;
+} elseif (file_exists('C:\\xampp\\php\\php.exe')) {
+    $phpBinary = 'C:\\xampp\\php\\php.exe';
+}
+
 foreach ($testFiles as $file => $description) {
     echo ">> تشغيل: {$description} [{$file}]...\n";
     $output = [];
     $returnCode = 0;
-    exec("C:\\xampp\\php\\php.exe \"" . __DIR__ . "/{$file}\"", $output, $returnCode);
+    $cmd = escapeshellarg($phpBinary) . ' ' . escapeshellarg(__DIR__ . DIRECTORY_SEPARATOR . $file);
+    exec($cmd, $output, $returnCode);
 
     if ($returnCode === 0) {
         $totalPassedSuites++;

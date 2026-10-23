@@ -5,6 +5,7 @@ use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Repositories\MySQL\MySQLCategoryRepository;
 use App\Repositories\MySQL\MySQLProductRepository;
+use Core\Database;
 use Core\Service;
 use Exception;
 
@@ -76,6 +77,8 @@ class ProductService extends Service
         // ضبط الأسعار
         $purchasePrice = isset($data['purchase_price']) ? (float)$data['purchase_price'] : 0.00;
         $sellingPrice = isset($data['selling_price']) ? (float)$data['selling_price'] : 0.00;
+        $wholesalePrice = isset($data['wholesale_price']) ? (float)$data['wholesale_price'] : ($sellingPrice > 0 ? round($sellingPrice * 0.9, 2) : 0.00);
+        $retailPrice = isset($data['retail_price']) ? (float)$data['retail_price'] : $sellingPrice;
         $minSellingPrice = isset($data['min_selling_price']) ? (float)$data['min_selling_price'] : 0.00;
 
         if ($minSellingPrice > $sellingPrice && $sellingPrice > 0) {
@@ -95,6 +98,8 @@ class ProductService extends Service
             'main_unit'         => !empty($data['main_unit']) ? trim($data['main_unit']) : 'عبوة',
             'purchase_price'    => $purchasePrice,
             'selling_price'     => $sellingPrice,
+            'wholesale_price'   => $wholesalePrice,
+            'retail_price'      => $retailPrice,
             'min_selling_price' => $minSellingPrice,
             'min_stock_alert'   => isset($data['min_stock_alert']) ? (int)$data['min_stock_alert'] : 10,
             'image_url'         => !empty($data['image_url']) ? trim($data['image_url']) : null,
@@ -146,6 +151,7 @@ class ProductService extends Service
             'category_id', 'item_code', 'trade_name', 'generic_name',
             'dosage_form', 'strength', 'manufacturer', 'origin_country',
             'barcode', 'main_unit', 'purchase_price', 'selling_price',
+            'wholesale_price', 'retail_price',
             'min_selling_price', 'min_stock_alert', 'image_url', 'is_active'
         ];
 
@@ -154,7 +160,7 @@ class ProductService extends Service
                 $val = $data[$field];
                 if (in_array($field, ['category_id', 'min_stock_alert', 'is_active'])) {
                     $val = (int)$val;
-                } elseif (in_array($field, ['purchase_price', 'selling_price', 'min_selling_price'])) {
+                } elseif (in_array($field, ['purchase_price', 'selling_price', 'wholesale_price', 'retail_price', 'min_selling_price'])) {
                     $val = (float)$val;
                 } else {
                     $val = $val !== '' ? trim($val) : null;
@@ -229,6 +235,8 @@ class ProductService extends Service
             'الوحدة',
             'سعر الشراء الافتراضي',
             'سعر البيع',
+            'سعر الجملة',
+            'سعر القطاعي',
             'الحد الأدنى لسعر البيع',
             'حد إعادة الطلب',
             'الرصيد المتوفر حالياً',
@@ -250,6 +258,8 @@ class ProductService extends Service
                 $p['main_unit'],
                 number_format((float)$p['purchase_price'], 2, '.', ''),
                 number_format((float)$p['selling_price'], 2, '.', ''),
+                number_format((float)($p['wholesale_price'] ?? ($p['selling_price'] * 0.9)), 2, '.', ''),
+                number_format((float)($p['retail_price'] ?? $p['selling_price']), 2, '.', ''),
                 number_format((float)$p['min_selling_price'], 2, '.', ''),
                 $p['min_stock_alert'],
                 number_format((float)$p['current_stock'], 2, '.', ''),
@@ -295,68 +305,86 @@ class ProductService extends Service
         $updated = 0;
         $errors = [];
 
-        foreach ($lines as $lineIndex => $line) {
-            if (empty(trim($line))) continue;
+        Database::beginTransaction();
+        try {
+            foreach ($lines as $lineIndex => $line) {
+                if (empty(trim($line))) continue;
 
-            $row = str_getcsv($line);
-            if (count($row) < 2) continue;
+                $row = str_getcsv($line);
+                if (count($row) < 2) continue;
 
-            $rowAssoc = [];
-            foreach ($header as $idx => $colName) {
-                $rowAssoc[$colName] = $row[$idx] ?? '';
-            }
-
-            $tradeName = $rowAssoc['الاسم التجاري'] ?? $rowAssoc['trade_name'] ?? '';
-            if (empty($tradeName)) {
-                $errors[] = "السطر " . ($lineIndex + 2) . ": الاسم التجاري مفقود.";
-                continue;
-            }
-
-            $itemCode = $rowAssoc['كود الصنف'] ?? $rowAssoc['item_code'] ?? '';
-            $genericName = $rowAssoc['الاسم العلمي'] ?? $rowAssoc['generic_name'] ?? null;
-            $catName = $rowAssoc['الفئة الدوائية'] ?? $rowAssoc['category_name'] ?? '';
-            $catId = $categoryMap[$catName] ?? $defaultCategoryId;
-
-            $productData = [
-                'trade_name'        => $tradeName,
-                'generic_name'      => $genericName,
-                'category_id'       => $catId,
-                'dosage_form'       => $rowAssoc['الشكل الدوائي'] ?? $rowAssoc['dosage_form'] ?? null,
-                'strength'          => $rowAssoc['التركيز'] ?? $rowAssoc['strength'] ?? null,
-                'manufacturer'      => $rowAssoc['الشركة المصنعة'] ?? $rowAssoc['manufacturer'] ?? null,
-                'origin_country'    => $rowAssoc['بلد المنشأ'] ?? $rowAssoc['origin_country'] ?? null,
-                'barcode'           => $rowAssoc['الباركود'] ?? $rowAssoc['barcode'] ?? null,
-                'main_unit'         => $rowAssoc['الوحدة'] ?? $rowAssoc['main_unit'] ?? 'عبوة',
-                'purchase_price'    => (float)($rowAssoc['سعر الشراء الافتراضي'] ?? $rowAssoc['purchase_price'] ?? 0),
-                'selling_price'     => (float)($rowAssoc['سعر البيع'] ?? $rowAssoc['selling_price'] ?? 0),
-                'min_selling_price' => (float)($rowAssoc['الحد الأدنى لسعر البيع'] ?? $rowAssoc['min_selling_price'] ?? 0),
-                'min_stock_alert'   => (int)($rowAssoc['حد إعادة الطلب'] ?? $rowAssoc['min_stock_alert'] ?? 10),
-                'is_active'         => 1,
-            ];
-
-            try {
-                // فحص هل الصنف موجود مسبقاً للتحديث أم للإضافة
-                $existing = null;
-                if (!empty($itemCode)) {
-                    $existing = $this->productRepo->findBy('item_code', $itemCode);
-                }
-                if (!$existing && !empty($productData['barcode'])) {
-                    $existing = $this->productRepo->findBy('barcode', $productData['barcode']);
+                $rowAssoc = [];
+                foreach ($header as $idx => $colName) {
+                    $rowAssoc[$colName] = $row[$idx] ?? '';
                 }
 
-                if ($existing) {
-                    $this->updateProduct($existing['id'], $productData, $userId);
-                    $updated++;
-                } else {
+                $tradeName = $rowAssoc['الاسم التجاري'] ?? $rowAssoc['trade_name'] ?? '';
+                if (empty($tradeName)) {
+                    $errors[] = "السطر " . ($lineIndex + 2) . ": الاسم التجاري مفقود.";
+                    continue;
+                }
+
+                $itemCode = $rowAssoc['كود الصنف'] ?? $rowAssoc['item_code'] ?? '';
+                $genericName = $rowAssoc['الاسم العلمي'] ?? $rowAssoc['generic_name'] ?? null;
+                $catName = $rowAssoc['الفئة الدوائية'] ?? $rowAssoc['category_name'] ?? '';
+                $catId = $categoryMap[$catName] ?? $defaultCategoryId;
+
+                $wholesalePrice = isset($rowAssoc['سعر الجملة']) || isset($rowAssoc['wholesale_price'])
+                    ? (float)($rowAssoc['سعر الجملة'] ?? $rowAssoc['wholesale_price'])
+                    : round((float)($rowAssoc['سعر البيع'] ?? $rowAssoc['selling_price'] ?? 0) * 0.9, 2);
+
+                $retailPrice = isset($rowAssoc['سعر القطاعي']) || isset($rowAssoc['retail_price'])
+                    ? (float)($rowAssoc['سعر القطاعي'] ?? $rowAssoc['retail_price'])
+                    : (float)($rowAssoc['سعر البيع'] ?? $rowAssoc['selling_price'] ?? 0);
+
+                $productData = [
+                    'trade_name'        => $tradeName,
+                    'generic_name'      => $genericName,
+                    'category_id'       => $catId,
+                    'dosage_form'       => $rowAssoc['الشكل الدوائي'] ?? $rowAssoc['dosage_form'] ?? null,
+                    'strength'          => $rowAssoc['التركيز'] ?? $rowAssoc['strength'] ?? null,
+                    'manufacturer'      => $rowAssoc['الشركة المصنعة'] ?? $rowAssoc['manufacturer'] ?? null,
+                    'origin_country'    => $rowAssoc['بلد المنشأ'] ?? $rowAssoc['origin_country'] ?? null,
+                    'barcode'           => $rowAssoc['الباركود'] ?? $rowAssoc['barcode'] ?? null,
+                    'main_unit'         => $rowAssoc['الوحدة'] ?? $rowAssoc['main_unit'] ?? 'عبوة',
+                    'purchase_price'    => (float)($rowAssoc['سعر الشراء الافتراضي'] ?? $rowAssoc['purchase_price'] ?? 0),
+                    'selling_price'     => (float)($rowAssoc['سعر البيع'] ?? $rowAssoc['selling_price'] ?? 0),
+                    'wholesale_price'   => $wholesalePrice,
+                    'retail_price'      => $retailPrice,
+                    'min_selling_price' => (float)($rowAssoc['الحد الأدنى لسعر البيع'] ?? $rowAssoc['min_selling_price'] ?? 0),
+                    'min_stock_alert'   => (int)($rowAssoc['حد إعادة الطلب'] ?? $rowAssoc['min_stock_alert'] ?? 10),
+                    'is_active'         => 1,
+                ];
+
+                try {
+                    // فحص هل الصنف موجود مسبقاً للتحديث أم للإضافة
+                    $existing = null;
                     if (!empty($itemCode)) {
-                        $productData['item_code'] = $itemCode;
+                        $existing = $this->productRepo->findBy('item_code', $itemCode);
                     }
-                    $this->createProduct($productData, $userId);
-                    $imported++;
+                    if (!$existing && !empty($productData['barcode'])) {
+                        $existing = $this->productRepo->findBy('barcode', $productData['barcode']);
+                    }
+
+                    if ($existing) {
+                        $this->updateProduct($existing['id'], $productData, $userId);
+                        $updated++;
+                    } else {
+                        if (!empty($itemCode)) {
+                            $productData['item_code'] = $itemCode;
+                        }
+                        $this->createProduct($productData, $userId);
+                        $imported++;
+                    }
+                } catch (Exception $e) {
+                    $errors[] = "السطر " . ($lineIndex + 2) . ": " . $e->getMessage();
                 }
-            } catch (Exception $e) {
-                $errors[] = "السطر " . ($lineIndex + 2) . ": " . $e->getMessage();
             }
+
+            Database::commit();
+        } catch (\Throwable $t) {
+            Database::rollBack();
+            throw new Exception("فشل استيراد الأصناف وتراجعت المنظومة عن التغييرات: " . $t->getMessage());
         }
 
         $this->logAudit($userId, 'import_csv', 'products', null, null, [

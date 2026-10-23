@@ -11,11 +11,37 @@ class Jwt
 {
     /**
      * الحصول على المفتاح السري للتوقيع
+     *
+     * @return string
+     * @throws \RuntimeException
      */
-    protected static function getSecretKey()
+    public static function getSecretKey()
     {
+        $envPath = dirname(__DIR__, 2) . '/.env';
+        if (file_exists($envPath)) {
+            \Core\Helpers\Env::load($envPath);
+        }
+
         $appConfig = require dirname(__DIR__, 2) . '/config/app.php';
-        return getenv('APP_KEY') ?: md5($appConfig['name'] . '_poker_pharma_secret_key_2026');
+        $key = \Core\Helpers\Env::get('APP_KEY') ?: getenv('APP_KEY') ?: ($appConfig['app_key'] ?? '');
+
+        $isProduction = ($appConfig['env'] ?? 'production') === 'production';
+
+        if (empty($key)) {
+            if ($isProduction) {
+                throw new \RuntimeException("مفتاح APP_KEY الإنتاجي غير مضبوط. يمنع تشغيل النظام في بيئة الإنتاج بمفتاح فارغ أو افتراضي لأسباب أمنية.");
+            }
+            // في بيئة التطوير المحلية فقط إذا لم يُعرف مفتاح في .env يتم استخدام مفتاح تطويري مع التحذير
+            $key = 'dev_poker_secret_key_change_in_production_min_32_chars_long!';
+        }
+
+        if (strlen($key) < 32) {
+            if ($isProduction) {
+                throw new \RuntimeException("مفتاح APP_KEY ضعيف جداً. يجب أن لا يقل عن 32 محرفاً في بيئة الإنتاج.");
+            }
+        }
+
+        return $key;
     }
 
     /**
@@ -47,6 +73,7 @@ class Jwt
         
         $now = time();
         $payload['iat'] = $now;
+        $payload['nbf'] = $now;
         $payload['exp'] = $now + $expirySeconds;
 
         $encodedHeader = self::base64UrlEncode($header);
@@ -95,9 +122,19 @@ class Jwt
             return null;
         }
 
-        // التحقق من تاريخ الانتهاء
-        if (isset($payload['exp']) && $payload['exp'] < time()) {
-            return null; // منتهي الصلاحية
+        // التحقق من تاريخ الانتهاء الإلزامي (exp is strictly mandatory)
+        if (!isset($payload['exp']) || !is_numeric($payload['exp']) || (int)$payload['exp'] < time()) {
+            return null; // منتهي الصلاحية أو غير صالح
+        }
+
+        // التحقق من تاريخ الصلاحية المستقبلي (Not Before) مع هامش انحراف ساعة 60 ثانية
+        if (isset($payload['nbf']) && is_numeric($payload['nbf']) && (int)$payload['nbf'] > (time() + 60)) {
+            return null; // الرمز غير صالح قبل هذا الوقت
+        }
+
+        // التحقق من تاريخ الإصدار (iat)
+        if (!isset($payload['iat']) || !is_numeric($payload['iat']) || (int)$payload['iat'] > (time() + 60)) {
+            return null; // تاريخ الإصدار مستقبلي غير صالح
         }
 
         return $payload;

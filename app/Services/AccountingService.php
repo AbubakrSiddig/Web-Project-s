@@ -374,4 +374,111 @@ class AccountingService extends Service
             throw $e;
         }
     }
+
+    /**
+     * إنشاء قيد يومية محاسبي مزدوج ومتوازن (Double-Entry Journal Entry)
+     */
+    public function createJournalEntry(array $data, $userId)
+    {
+        $description = trim($data['description'] ?? '');
+        $entryDate = !empty($data['entry_date']) ? $data['entry_date'] : date('Y-m-d');
+        $rawLines = $data['lines'] ?? [];
+
+        if (empty($description)) {
+            throw new Exception("شرح وبيان القيد المحاسبي مطلوب.");
+        }
+
+        if (empty($rawLines) || !is_array($rawLines) || count($rawLines) < 2) {
+            throw new Exception("يجب أن يحتوي القيد المحاسبي المزدوج على طرفين على الأقل (طرف مدين وطرف دائن).");
+        }
+
+        $totalDebit = 0.00;
+        $totalCredit = 0.00;
+        $preparedLines = [];
+
+        foreach ($rawLines as $idx => $line) {
+            $accountName = trim($line['account_name'] ?? '');
+            $debit = round((float)($line['debit'] ?? 0), 2);
+            $credit = round((float)($line['credit'] ?? 0), 2);
+
+            if (empty($accountName)) {
+                throw new Exception("اسم الحساب في السطر رقم " . ($idx + 1) . " مطلوب.");
+            }
+
+            if ($debit < 0 || $credit < 0) {
+                throw new Exception("لا يمكن إدخال مبالغ سالبة في بنود القيد اليومي.");
+            }
+
+            if ($debit == 0 && $credit == 0) {
+                throw new Exception("السطر رقم " . ($idx + 1) . " يجب أن يحتوي على مبلغ مدين أو دائن أكبر من الصفر.");
+            }
+
+            $totalDebit += $debit;
+            $totalCredit += $credit;
+
+            $preparedLines[] = [
+                'account_name' => $accountName,
+                'account_type' => $line['account_type'] ?? 'asset',
+                'debit'        => $debit,
+                'credit'       => $credit,
+                'notes'        => !empty($line['notes']) ? trim($line['notes']) : null,
+            ];
+        }
+
+        // قاعدة محاسبية دولية صارمة: توازن القيد المحاسبي المزدوج
+        if (abs($totalDebit - $totalCredit) >= 0.01) {
+            throw new Exception("القيد المحاسبي غير متوازن! إجمالي المدين (" . number_format($totalDebit, 2) . ") لا يساوي إجمالي الدائن (" . number_format($totalCredit, 2) . "). الفارق: " . number_format(abs($totalDebit - $totalCredit), 2));
+        }
+
+        if ($totalDebit <= 0) {
+            throw new Exception("إجمالي مبالغ القيد يجب أن يكون أكبر من الصفر.");
+        }
+
+        Database::beginTransaction();
+        try {
+            $entryNumber = $this->accountingRepo->generateJournalEntryNumber();
+
+            $entryData = [
+                'entry_number'   => $entryNumber,
+                'entry_date'     => $entryDate,
+                'description'    => $description,
+                'reference_type' => $data['reference_type'] ?? 'manual',
+                'reference_id'   => !empty($data['reference_id']) ? (int)$data['reference_id'] : null,
+                'total_debit'    => $totalDebit,
+                'total_credit'   => $totalCredit,
+                'is_posted'      => 1,
+                'created_by'     => $userId,
+            ];
+
+            $entryId = $this->accountingRepo->createJournalEntry($entryData, $preparedLines);
+
+            $this->logAudit($userId, 'create', 'journal_entries', $entryId, null, [
+                'entry_number' => $entryNumber,
+                'total_debit'  => $totalDebit,
+                'total_credit' => $totalCredit,
+                'description'  => $description,
+            ]);
+
+            Database::commit();
+
+            return $this->getJournalEntryById($entryId);
+        } catch (Exception $e) {
+            Database::rollBack();
+            throw $e;
+        }
+    }
+
+    public function getJournalEntries(array $filters = [], $page = 1, $perPage = 25)
+    {
+        return $this->accountingRepo->getJournalEntries($filters, $page, $perPage);
+    }
+
+    public function getJournalEntryById($id)
+    {
+        $entry = $this->accountingRepo->findJournalEntryById($id);
+        if (!$entry) {
+            throw new Exception("القيد اليومي غير موجود.");
+        }
+        return $entry;
+    }
 }

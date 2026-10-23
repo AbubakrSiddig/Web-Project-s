@@ -31,6 +31,9 @@ class App
         require_once __DIR__ . '/Autoloader.php';
         Autoloader::register();
 
+        // تحميل متغيرات البيئة من ملف .env إن وجد
+        \Core\Helpers\Env::load();
+
         // 2. تحميل الإعدادات
         $config = require dirname(__DIR__) . '/config/app.php';
 

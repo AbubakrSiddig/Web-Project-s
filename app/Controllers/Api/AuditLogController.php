@@ -21,8 +21,7 @@ class AuditLogController extends Controller
 
     public function index(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 50);
+        list($page, $perPage) = $this->getPaginationParams($request, 50, 100);
         $filters = [
             'user_id'    => $request->query('user_id'),
             'action'     => $request->query('action'),

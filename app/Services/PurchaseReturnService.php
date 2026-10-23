@@ -119,6 +119,51 @@ class PurchaseReturnService extends Service
             ];
         }
 
+        // التحقق من صحة فاتورة الشراء الأصلية وعدم تجاوز الكمية المشتراة
+        if (!empty($data['purchase_invoice_id'])) {
+            $purchaseInvoiceId = (int)$data['purchase_invoice_id'];
+            $purchaseRepo = new \App\Repositories\MySQL\MySQLPurchaseRepository();
+            $purchaseInvoice = $purchaseRepo->getInvoiceDetails($purchaseInvoiceId);
+            if (!$purchaseInvoice) {
+                throw new Exception("فاتورة الشراء الأصلية [ID: {$purchaseInvoiceId}] غير موجودة.");
+            }
+
+            $invoiceItemsMap = [];
+            foreach ($purchaseInvoice['items'] as $invItem) {
+                $k = $invItem['product_id'] . '_' . $invItem['batch_id'];
+                $invoiceItemsMap[$k] = (float)$invItem['quantity'];
+            }
+
+            $alreadyReturnedStmt = Database::pdo()->prepare("
+                SELECT pri.product_id, pri.batch_id, SUM(pri.quantity) as total_returned
+                FROM purchase_return_items pri
+                JOIN purchase_returns pr ON pr.id = pri.purchase_return_id
+                WHERE pr.purchase_invoice_id = ?
+                GROUP BY pri.product_id, pri.batch_id
+            ");
+            $alreadyReturnedStmt->execute([$purchaseInvoiceId]);
+            $alreadyReturnedMap = [];
+            while ($row = $alreadyReturnedStmt->fetch()) {
+                $k = $row['product_id'] . '_' . $row['batch_id'];
+                $alreadyReturnedMap[$k] = (float)$row['total_returned'];
+            }
+
+            foreach ($items as $item) {
+                $k = $item['product_id'] . '_' . $item['batch_id'];
+                if (!isset($invoiceItemsMap[$k])) {
+                    throw new Exception("الصنف رقم [{$item['product_id']}] بالتشغيلة [{$item['batch_id']}] ليس جزءاً من فاتورة الشراء الأصلية [{$purchaseInvoice['invoice_number']}].");
+                }
+
+                $purchasedQty = $invoiceItemsMap[$k];
+                $prevReturned = $alreadyReturnedMap[$k] ?? 0.00;
+                $maxReturnable = $purchasedQty - $prevReturned;
+
+                if ($item['quantity'] > $maxReturnable) {
+                    throw new Exception("الكمية المطلوب إرجاعها ({$item['quantity']}) تتجاوز الكمية المتبقية القابلة للإرجاع للمورد ({$maxReturnable}) من فاتورة الشراء [{$purchaseInvoice['invoice_number']}].");
+                }
+            }
+        }
+
         Database::beginTransaction();
         try {
             $returnNumber = $this->returnRepo->generatePurchaseReturnNumber();

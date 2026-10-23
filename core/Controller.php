@@ -27,9 +27,9 @@ abstract class Controller
     /**
      * إرسال رد خطأ
      */
-    protected function error($message = 'حدث خطأ أثناء معالجة الطلب', $errors = null, $statusCode = 400)
+    protected function error($message = 'حدث خطأ أثناء معالجة الطلب', $errors = null, $statusCode = 400, $code = 'BAD_REQUEST')
     {
-        return Response::error($message, $errors, $statusCode);
+        return Response::error($message, $errors, $statusCode, $code);
     }
 
     /**
@@ -46,5 +46,35 @@ abstract class Controller
             Response::validationError($validator->getErrors());
         }
         return $validator->getValidatedData();
+    }
+
+    /**
+     * استخراج معاملات الترقيم الآمنة وتحديد سقف أعلى لمنع استنزاف الموارد
+     *
+     * @param Request $request
+     * @param int $defaultPerPage
+     * @param int $maxPerPage
+     * @return array [$page, $perPage]
+     */
+    protected function getPaginationParams(Request $request, $defaultPerPage = 25, $maxPerPage = 100)
+    {
+        $page = max(1, (int)$request->query('page', 1));
+        $perPage = max(1, min($maxPerPage, (int)$request->query('per_page', $defaultPerPage)));
+        return [$page, $perPage];
+    }
+
+    /**
+     * استخراج المستخدم الموثق الحالي مع رفض صارم لأي fallback
+     *
+     * @param Request $request
+     * @return array
+     */
+    protected function getAuthUser(Request $request)
+    {
+        $user = $request->getUser();
+        if (!$user || empty($user['id'])) {
+            Response::unauthorized('يجب تسجيل الدخول أولاً لتنفيذ هذا الإجراء.');
+        }
+        return $user;
     }
 }

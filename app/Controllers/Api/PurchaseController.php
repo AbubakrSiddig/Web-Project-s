@@ -25,8 +25,7 @@ class PurchaseController extends Controller
      */
     public function index(Request $request)
     {
-        $page = (int)$request->query('page', 1);
-        $perPage = (int)$request->query('per_page', 25);
+        list($page, $perPage) = $this->getPaginationParams($request, 25, 100);
         $filters = [
             'supplier_id'  => $request->query('supplier_id'),
             'warehouse_id' => $request->query('warehouse_id'),

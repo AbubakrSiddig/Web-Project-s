@@ -23,4 +23,10 @@ interface AccountingRepositoryInterface
     public function findVoucherById($id);
     public function getVouchers(array $filters = [], $page = 1, $perPage = 25);
     public function generateVoucherNumber($type);
+
+    // القيود اليومية المزدوجة (Journal Entries)
+    public function createJournalEntry(array $data, array $lines);
+    public function findJournalEntryById($id);
+    public function getJournalEntries(array $filters = [], $page = 1, $perPage = 25);
+    public function generateJournalEntryNumber();
 }
